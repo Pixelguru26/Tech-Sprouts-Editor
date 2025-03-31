@@ -1,4 +1,8 @@
 class JSLib2 {
+  // Useful constants
+  static svgns = "http://www.w3.org/2000/svg";
+
+  // ==========================================
   /**
    * Returns the supplied parameter if it is a string. Otherwise, null.
    * @param {*} v 

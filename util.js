@@ -199,7 +199,7 @@ gameData.libs.push(() => {
     /**
      * Uses computed style to translate a css color string to its rgba components.
      * @param {String} str 
-     * @returns 
+     * @returns {Array<number>}
      */
     static csstorgb(str) {
       let temp = document.createElement("div");

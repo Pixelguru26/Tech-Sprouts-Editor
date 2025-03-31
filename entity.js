@@ -443,7 +443,7 @@ gameData.libs.push(() => {
   game.entity.player = class Player extends game.entity.livingEntity {
     constructor(x = 450, y = 500) {
       super("player", x, y, 270, 1, "circle", 50);
-      this.weapon_keybinds = {};
+      this.weaponKeybinds = {};
       this.reset();
     }
 
@@ -497,7 +497,8 @@ gameData.libs.push(() => {
         return timer.owner.owner.shoot(this.fire_fn, offset[0], offset[1]);
       }
 
-      fire(timer, time = 0, lag = 0) {
+      fire(timer = null, time = 0, lag = 0) {
+        timer ??= this.timer;
         // Ammo consumption accounts for negative ammo values
         // and potentially negative ammo consumption values.
         // Regardless, stops and clamps ammo count to 0
@@ -533,15 +534,15 @@ gameData.libs.push(() => {
 
     addWeapon(keybind, weapon) {
       weapon.owner = this;
-      this.weapon_keybinds[keybind] = this.weapons.length;
+      this.weaponKeybinds[keybind] = this.weapons.length;
       this.weapons.push(weapon);
     }
 
     update(dt) {
       super.update(dt);
-      for (const key in this.weapon_keybinds) {
-        if (Object.prototype.hasOwnProperty.call(this.weapon_keybinds, key)) {
-          const id = this.weapon_keybinds[key];
+      for (const key in this.weaponKeybinds) {
+        if (Object.prototype.hasOwnProperty.call(this.weaponKeybinds, key)) {
+          const id = this.weaponKeybinds[key];
           if (game.keystates[key]) {
             this.weapons[id].sustain();
           }
@@ -550,9 +551,9 @@ gameData.libs.push(() => {
     }
 
     keydown(key) {
-      for (const keybind in this.weapon_keybinds) {
-        if (Object.prototype.hasOwnProperty.call(this.weapon_keybinds, keybind)) {
-          const id = this.weapon_keybinds[keybind];
+      for (const keybind in this.weaponKeybinds) {
+        if (Object.prototype.hasOwnProperty.call(this.weaponKeybinds, keybind)) {
+          const id = this.weaponKeybinds[keybind];
           if (key == keybind) {
             this.weapons[id].beginfire();
           }

@@ -41,9 +41,36 @@
   </head>
   <body>
     <script src="./jslib.js"></script>
-    <script src="./elements.js"></script>
+    <template id="template-doc-fn-param">
+      <tr>
+        <td>
+          <slot></slot>
+        </td>
+        <td>
+          <slot></slot>
+        </td>
+        <td>
+          <slot></slot>
+        </td>
+      </tr>
+    </template>
+    <template id="template-doc-fn">
+      <details>
+        <summary>
+          <slot name="name">Unutterable Horror</slot>
+        </summary>
+        <p>Accessed as <code><slot name="def"><span style="color: darkred;">part of a dark ritual</span></slot></code></p>
+        <slot name="params" type="table"></slot>
+        <hr>
+        <p>Returns:
+          <code><slot name="returns"><span style="color: red">blood for the blood god, skulls for his throne!</span></slot></code>
+        </p>
+        <hr>
+        <slot name="desc"></slot>
+      </details>
+    </template>
     <jse-new-tabbed-panel id="tabpanel" style="height: 100%;">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
       <style>      
         #game-canvas {
           margin: 0 auto;
@@ -152,27 +179,6 @@
           opacity: 1;
         }
       </style>
-      <div id="game" style="width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center;">
-        <summary>
-          Test your modifications in play
-        </summary>
-        <div style="width: 900px; height: 600px; position: relative;">
-          <canvas id="game-canvas"></canvas>
-          <div id="game-ui-layer"></div>
-        </div>
-      </div>
-      <div title="Editor" style="height: 100%;">
-        <summary>
-          Modify the game with Python
-        </summary>
-        <div id="editor" style="height: 100%;"></div>
-      </div>
-      <div title="Console" style="height: 100%;">
-        <summary>
-          Error log and output for <code>print()</code>
-        </summary>
-        <div id="console" style="height: 100%;"></div>
-      </div>
       <div title="Docs" , style="width: 100%; height: 100%; overflow-y: scroll; overflow-wrap: anywhere;">
         <summary>
           Reference material for this engine
@@ -205,11 +211,12 @@
           }
       
           details:hover {
-            background-color: #07150D40;
+            /* background-color: #07150D40; */
             box-shadow: 0px 8px 8px #07150DA0;
           }
       
-          details>*+* {
+          /* Indents contents in each nested block */
+          details>:not(summary,details,jse-docfn) {
             padding-left: 2ch;
           }
       
@@ -233,7 +240,7 @@
             font-size: 1.33em;
           }
       
-          details>details>details>summary {
+          details>details>details summary {
             font-size: 1.17em;
           }
       
@@ -242,10 +249,30 @@
             background-color: #67a38f7e;
             text-shadow: 0px 0px 2px #07150D;
           }
+          /* Used for deprecated or unsupported methods */
+          .disabled {
+            color: #757770;
+          }
         </style>
         <hgroup id="docs-game">
-          <h2>Game object</h2>
-          <details><summary>State Control</summary>
+          <!-- Game Object -->
+          <details>
+            <summary>Game Object</summary>
+            <p>
+              All access to game functionality, input, and output,
+              is handled through the <code>game</code> object.<br>
+              Every editor script begins with the line <br><code style="margin-left: 2ch;">import game</code><br>
+              This tells Python to provide access to the internal control object
+              as a variable called <code>game</code>.<br>
+              Although it is possible to rename this variable
+              <i style="opacity: 70%;">(<code>import game as g</code>, for example)</i>
+              it will be referred to as <code>game</code> throughout the rest of this documentation
+              and in any lessons involving this system.
+            </p>
+          </details>
+          <!-- State Control -->
+          <details>
+            <summary>State Control</summary>
             <p>
               The central system controlling what code
               the game executes is the <em>state machine</em>.
@@ -270,10 +297,14 @@
               <code>setState(<i>state</i>)</code>
               function defined in the root object like so:
             <p><code>game.setState("menu")</code></p>
-  
+      
             </p>
           </details>
-          <details><summary>Entities</summary>
+          <!-- Entities -->
+          <details open>
+            <summary>Entities</summary>
+            <p>Accessed as <code>game.entity</code></p>
+            <!-- Intro -->
             <details>
               <summary>How entities work</summary>
               <p>
@@ -288,26 +319,7 @@
                 unless special code is added to handle it.
               </p>
             </details>
-            <details>
-              <summary>Technical details</summary>
-              <p>
-                Entities in this engine are divided into two main categories.
-                The basic <code>game.entities</code> list is sufficient for most purposes,
-                but for optimization, an additional <code>game.bullets</code> list
-                is provided which helps to reduce unnecessary calculations.
-              </p>
-              <p>
-                <code>game.player</code> is outside the entity lists entirely, handled
-                with special interaction cases built into the root entity framework
-                to provide seamless integration.
-              </p>
-              <p>
-                Addition and removal of entities is deferred until the end of each frame,
-                in fully encapsulated phases. This is intended to prevent unstable
-                interactions, such as mutation during traversal.
-                However, no such protection is provided to entity properties.
-              </p>
-            </details>
+            <!-- Usage -->
             <details>
               <summary>Usage</summary>
               <p>
@@ -347,18 +359,1660 @@
                 method is overridden. An example of the minimum requirement for a functional entity follows.
               </p>
               <pre>
-<code style="display: block;">class CustomEntity(game.entity):
-def __init__(this):
-super().__init__()
-this.sprite = game.Asset.assets["bullet_base"]
-
-def update(this, dt):
-super().update(dt)
-this.forward(100 * dt)</code>
-              </pre>
+      <code style="display: block;">class CustomEntity(game.entity):
+  def __init__(this):
+    super().__init__()
+    this.sprite = game.Asset.assets["bullet_base"]
+  
+  def update(this, dt):
+    super().update(dt)
+    this.forward(100 * dt)</code>
+                    </pre>
+            </details>
+            <!-- Reference -->
+            <details open>
+              <summary>Reference</summary>
+              <!-- Static members -->
+              <details>
+                <summary>Static members</summary>
+                <ul>
+                  <li><code>type</code> : <code>string</code> : A string used to identify and differentiate subclasses. Each subclass will override this.</li>
+                  <li><code>teams</code> : <code>Array of strings</code> : A list containing the default teams in common use.</li>
+                  <ul>
+                    By default, this is:
+                    <li><code>player</code></li>
+                    <li><code>enemy</code></li>
+                    <li><code>all</code></li>
+                    <li><code>none</code></li>
+                  </ul>
+                  <li>
+                    <code>relationships</code> : <code>Object&lt;string to Object&lt;string to string&gt;&gt;</code> : 
+                    The central registry used to define friend/foe relationships between entity teams.
+                  </li>
+                </ul>
+              </details>
+              <!-- Instance members -->
+              <details>
+                <summary>Instance members</summary>
+                <ul>
+                  <li><code>unitid</code> : <code>number</code> : Internal unique id for comparisons and registry. Recycled immediately upon entity death.</li>
+                  <li><code>team</code> : <code>string</code> : Team alignment of the entity. Used to determine friend/foe relations on collisions.</li>
+                  <li><code>angle</code> : <code>number</code> : Rotation of the entity in degrees clockwise from screen east. (directly to the right)</li>
+                  <li><code>scale</code> : <code>number</code> : Visual scale. Does not apply to collisions.</li>
+                  <li><code>autoscale</code> : <code>boolean</code> : If true, automatically scales entity visuals to match the radius of its collider. Only applies to circular entities.</li>
+                  <li><code>body</code> : <code>game.geo.shape | {x: number, y: number, a: number, b:number}</code> : Collision shape used for the entity.</li>
+                  <li><code>alive</code> : <code>boolean</code> : When false, the entity is removed from the field at the end of the next frame.</li>
+                  <li><code>age</code> : <code>number</code> : Age of the entity in seconds. Relies on root update calls. Used for animated visuals.</li>
+                </ul>
+              </details>
+              <!-- Instance properties -->
+              <details>
+                <summary>Instance properties</summary>
+                <ul>
+                  <li><code>collisionType</code> : <code>string</code> : Automatically switches collision body when changed. Corresponds to the same values as the constructor. Uses previous geometry dimensions to set most appropriate new dimensions.</li>
+                  <li><code>sprite</code> : <code>string | game.Asset.AssetImage</code> : Allows the display sprite of the entity to be set in multiple intuitive ways, and automatically updates when the sprite loads.</li>
+                  <h4>Passthroughs for physics body</h4>
+                  <li><code>x</code> : <code>number</code> : Top left corner of rectangle, center of circle, first point of line segment.</li>
+                  <li><code>y</code> : <code>number</code> : Top left corner of rectangle, center of circle, first point of line segment.</li>
+                  <li><code>w</code> : <code>number</code> : Width</li>
+                  <li><code>h</code> : <code>number</code> : Height</li>
+                  <li><code>r</code> : <code>number</code> : Radius (only applies to circle)</li>
+                  <li><code>x2</code> : <code>number</code> : Second point of line segment. Only applies to line segment.</li>
+                  <li><code>y2</code> : <code>number</code> : Second point of line segment. Only applies to line segment.</li>
+                  <li><code>cx</code> : <code>number</code> : Center x coordinate, even of rectangles and line segments.</li>
+                  <li><code>cy</code> : <code>number</code> : Center y coordinate, even of rectangles and line segments.</li>
+                </ul>
+              </details>
+              <!-- Methods -->
+              <details>
+                <summary>Methods</summary>
+                <!-- Constructor -->
+                <jse-docfn>
+                  <b>Constructor</b>
+                  <b>new game.entity(team, x, y, angle, scale, collisionType, a, b)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>team</code></td>
+                      <td>:<code>string?</code></td>
+                      <td>Optional team alignment. <code>"none"</code> by default.</td>
+                    </tr>
+                    <tr>
+                      <td><code>x</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>x coordinate of the physics body. Increasing x moves the entity to the right. Top left corner for aabb, center for circle, or first point for line segment.</td>
+                    </tr>
+                    <tr>
+                      <td><code>y</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>y coordinate of the physics body. Increasing y moves the entity downward. Top left corner for aabb, center for circle, or first point for line segment.</td>
+                    </tr>
+                    <tr>
+                      <td><code>angle</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Angle of the entity in degrees clockwise from screen east. (0 = directly to the right)</td>
+                    </tr>
+                    <tr>
+                      <td><code>scale</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Visual scale of the entity's sprite. Does not affect physics. 1 by default.</td>
+                    </tr>
+                    <tr>
+                      <td><code>a</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Context-dependent dimension which depends on the collision type. aabb: width, circle: radius, line segment: x2</td>
+                    </tr>
+                    <tr>
+                      <td><code>b</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Context-dependent dimension which depends on collision type. aabb: height, line segment: y2.</td>
+                    </tr>
+                    <tr>
+                      <td><code>n</code></td>
+                      <td>:<code>any</code></td>
+                      <td>The value to be tested</td>
+                    </tr>
+                  </table>
+                  <b>game.entity</b>
+                  <p>
+                    This constructor may be called with no arguments at all,
+                    in which case the entity will be a circle with 0 radius - ie, a point.
+                  </p>
+                </jse-docfn>
+                <!-- update -->
+                <jse-docfn>
+                  <b>update</b>
+                  <b>instance.update(dt)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>dt</code></td>
+                      <td>:<code>number</code></td>
+                      <td>Time since last frame, in seconds. Usually small.</td>
+                    </tr>
+                  </table>
+                  <b>none</b>
+                  <p>
+                    This method runs once every frame before the entity is rendered, as long as it is alive.<br>
+                    It handles entity behavior and mechanics. Usually it is replaced in derived classes,
+                    and rarely does it need to be called manually.
+                  </p>
+                </jse-docfn>
+                <!-- draw -->
+                <jse-docfn>
+                  <b>draw</b>
+                  <b>instance.draw(canvas)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>canvas</code></td>
+                      <td>:<a href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D">canvas context?</a></td>
+                      <td>The target canvas context for rendering. May be null, therefore <code>game.graphics</code> is the preferred method of rending.</td>
+                    </tr>
+                  </table>
+                  <b>none</b>
+                  <p>
+                    Runs once every frame to draw the entity onto the screen.
+                    By default, entities render their set sprite, which may be animated,
+                    to a sensible location based on the collision geometry.
+                  </p>
+                </jse-docfn>
+                <!-- delete -->
+                <jse-docfn>
+                  <b>delete</b>
+                  <b>instance.delete(reason)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>reason</code></td>
+                      <td>:<code>string?</code></td>
+                      <td>Reason for deletion. Used sometimes to determine if points should be granted to the player.</td>
+                    </tr>
+                  </table>
+                  <b>none</b>
+                  <p>
+                    Marks the entity as "dead" and immediately recycles its unit id.
+                    At the end of the frame, it will be removed from the entity list.
+                  </p>
+                </jse-docfn>
+                <!-- equals -->
+                <jse-docfn>
+                  <b>equals</b>
+                  <b>instance.equals(other)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>other</code></td>
+                      <td>:<code>any</code></td>
+                      <td>Entity or object to be compared.</td>
+                    </tr>
+                  </table>
+                  <b>boolean</b>
+                  <p>
+                    Returns true if <code>other</code> is a reference to the same entity.
+                  </p>
+                </jse-docfn>
+                <!-- touch -->
+                <jse-docfn>
+                  <b>touch</b>
+                  <b>instance.touch(other)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>other</code></td>
+                      <td>:<code>game.entity</code></td>
+                      <td></td>
+                    </tr>
+                  </table>
+                  <b>none</b>
+                  <p>
+                    Called upon physics contact with another entity, regardless of team relations.
+                  </p>
+                </jse-docfn>
+                <!-- intersects -->
+                <jse-docfn>
+                  <b>intersects</b>
+                  <b>instance.intersects(other)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>other</code></td>
+                      <td>:<code>game.entity</code></td>
+                      <td></td>
+                    </tr>
+                  </table>
+                  <b>boolean</b>
+                  <p>
+                    Returns true if the colliders of both entities intersect.
+                  </p>
+                </jse-docfn>
+                <!-- Shoot -->
+                <jse-docfn>
+                  <b>shoot</b>
+                  <b>instance.shoot(variant, offsetX, offsetY)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>variant</code></td>
+                      <td>:<code>string?</code></td>
+                      <td>
+                        A string identifier for which type of bullet to fire.<br>
+                        Variants are registered in <code>game.entity.bullet.variants</code>.<br>
+                        By default, the game includes the following variants:<br>
+                        <ul>
+                          <li><code>"base"</code> - the default if no string is provided</li>
+                          <li><code>"rocket"</code></li>
+                          <li><code>"explosion"</code></li>
+                          <li><code>"lance"</code></li>
+                        </ul>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><code>offsetX</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Lateral offset for firing. Positive offsetX shifts the bullet to the entity's right.</td>
+                    </tr>
+                    <tr>
+                      <td><code>offsetY</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Axial offset for firing. Positive offsetY shifts the bullet ahead of the entity.</td>
+                    </tr>
+                  </table>
+                  <b>game.entity.bullet</b>
+                  <p>
+                    Fires a bullet from the entity's position with appropriate team and damage multiplier.
+                    Can be used on any entity derived from this class, including other bullets,
+                    although it's somewhat ill-advised under most circumstances.
+                  </p>
+                </jse-docfn>
+                <h4>Turtle capabilities</h4>
+                <!-- forward/back -->
+                <jse-docfn>
+                  <b>forward</b>
+                  <b>instance.forward(distance)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>distance</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Distance to move, in pixels. Defaults to 1.</td>
+                    </tr>
+                  </table>
+                  <b>none</b>
+                  <p>
+                    Moves the entity forward by the specified number of pixels.
+                  </p>
+                </jse-docfn>
+                <jse-docfn>
+                  <b>backward</b>
+                  <b>instance.backward(distance)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>distance</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Distance to move, in pixels. Defaults to 1.</td>
+                    </tr>
+                  </table>
+                  <b>none</b>
+                  <p>
+                    Moves the entity backward by the specified number of pixels.<br>
+                    Equivalent to <code>instance.forward(-distance)</code>
+                  </p>
+                </jse-docfn>
+                <!-- left/right -->
+                <jse-docfn>
+                  <b>right</b>
+                  <b>instance.right(distance)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>distance</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Distance to move, in pixels. Defaults to 1.</td>
+                    </tr>
+                  </table>
+                  <b>none</b>
+                  <p>
+                    Moves the entity to its right (perpendicular to the direction it is facing)
+                    by the specified number of pixels.
+                  </p>
+                </jse-docfn>
+                <jse-docfn>
+                  <b>left</b>
+                  <b>instance.left(distance)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>distance</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Distance to move, in pixels. Defaults to 1.</td>
+                    </tr>
+                  </table>
+                  <b>none</b>
+                  <p>
+                    Moves the entity to its left (perpendicular to the direction it is facing)
+                    by the specified number of pixels.<br>
+                    Equivalent to <code>instance.right(-distance)</code>
+                  </p>
+                </jse-docfn>
+                <!-- rotation -->
+                <jse-docfn>
+                  <b>rotate</b>
+                  <b>instance.rotate(angle)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>angle</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Angle to turn by, in degrees. Defaults to 90°.</td>
+                    </tr>
+                  </table>
+                  <b>none</b>
+                  <p>
+                    Rotates the entity clockwise by the specified number of degrees.
+                  </p>
+                </jse-docfn>
+                <jse-docfn>
+                  <b>turnRight</b>
+                  <b>instance.turnRight(angle)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>angle</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Angle to turn by, in degrees. Defaults to 90°.</td>
+                    </tr>
+                  </table>
+                  <b>none</b>
+                  <p>
+                    Rotates the entity clockwise by the specified number of degrees.<br>
+                    Equivalent to <code>instance.rotate(angle)</code>
+                  </p>
+                </jse-docfn>
+                <jse-docfn>
+                  <b>turnLeft</b>
+                  <b>instance.turnLeft(angle)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>angle</code></td>
+                      <td>:<code>number?</code></td>
+                      <td>Angle to turn by, in degrees. Defaults to 90°.</td>
+                    </tr>
+                  </table>
+                  <b>none</b>
+                  <p>
+                    Rotates the entity counter-clockwise by the specified number of degrees.<br>
+                    Equivalent to <code>instance.turnRight(-angle)</code>
+                  </p>
+                </jse-docfn>
+                <!-- move -->
+                <jse-docfn>
+                  <b>move</b>
+                  <b>instance.move(x, y)</b>
+                  <table>
+                    <thead>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Desc</th>
+                    </thead>
+                    <tr>
+                      <td><code>x</code></td>
+                      <td>:<code>number</code></td>
+                      <td>Distance right, in pixels.</td>
+                    </tr>
+                    <tr>
+                      <td><code>y</code></td>
+                      <td>:<code>number</code></td>
+                      <td>Distance forward, in pixels.</td>
+                    </tr>
+                  </table>
+                  <b>none</b>
+                  <p>
+                    Moves the entity by the provided offset vector.<br>
+                    Combines <code>instance.forward(y)</code> and <code>instance.right(x)</code>
+                  </p>
+                </jse-docfn>
+              </details>
+              <details>
+                <summary>Subclasses</summary>
+                <details>
+                  <summary>livingEntity</summary>
+                  <p>Accessed as <code>game.entity.livingEntity</code></p>
+                  <p>
+                    Provides more specialized functionality than the base entity,
+                    including health and speed.
+                  </p>
+                  <!-- Instance members -->
+                  <details>
+                    <summary>Instance members</summary>
+                    <ul>
+                      <li><code>speed</code> : <code>number</code> : Speed of the entity's movement under normal conditions in pixels/second. Defaults to 100.</li>
+                      <li><code>health</code> : <code>number</code> : Current health of the entity. By default, if this reaches 0, the entity is deleted.</li>
+                      <li><code>health_lost</code> : <code>(readonly) number</code> : Returns the amount of health recently lost. This decreases smoothly each frame unless damage is taken.</li>
+                      <li><code>health_smooth</code> : <code>(readonly) number</code> : A value which smoothly approaches the entity's current health over time. Used for fancy health bars.</li>
+                    </ul>
+                  </details>
+                  <!-- Methods -->
+                  <details>
+                    <summary>Methods</summary>
+                    <!-- damage -->
+                    <jse-docfn>
+                      <b>damage</b>
+                      <b>instance.damage(amount, source)</b>
+                      <table>
+                        <thead>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Desc</th>
+                        </thead>
+                        <tr>
+                          <td><code>amount</code></td>
+                          <td>:<code>number</code></td>
+                          <td>Raw damage taken. No defense system is currently in place to modify this.</td>
+                        </tr>
+                        <tr>
+                          <td><code>source</code></td>
+                          <td>:<code>any</code></td>
+                          <td>Damage source sent to <code>delete</code> if this will cause the entity to reach 0 health.</td>
+                        </tr>
+                      </table>
+                      <b>none</b>
+                      <p>
+                        Reduces the entity's health by the specified amount.
+                        If health reaches 0, the entity is automatically deleted.
+                      </p>
+                    </jse-docfn>
+                    <!-- indicateBar -->
+                    <jse-docfn>
+                      <b class="disabled">indicateBar</b>
+                      <b>instance.indicateBar(canvas, val, max, secondary, tier, span)</b>
+                      <table>
+                        <thead>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Desc</th>
+                        </thead>
+                        <tr>
+                          <td><code>canvas</code></td>
+                          <td>:<code><a href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D">canvas context</a></code></td>
+                          <td>Target canvas, typically the same one the entity is rendered to.</td>
+                        </tr>
+                        <tr>
+                          <td><code>val</code></td>
+                          <td>:<code>number</code></td>
+                          <td>Display value (for example, current health)</td>
+                        </tr>
+                        <tr>
+                          <td><code>max</code></td>
+                          <td>:<code>number</code></td>
+                          <td>Divisor of the display value (for example, maximum health)</td>
+                        </tr>
+                        <tr>
+                          <td><code>secondary</code></td>
+                          <td>:<code>number?</code></td>
+                          <td>Adds a red segment to the display bar. Used primarily to display health, shields, or armor lost.</td>
+                        </tr>
+                        <tr>
+                          <td><code>tier</code></td>
+                          <td>:<code>number?</code></td>
+                          <td>Expands the radius of the display with a set multiplier for easy layering.</td>
+                        </tr>
+                        <tr>
+                          <td><code>span</code></td>
+                          <td>:<code>number?</code></td>
+                          <td>Extent of the bar in degrees. By default, the bar spans 45°.</td>
+                        </tr>
+                      </table>
+                      <b>none</b>
+                      <p>
+                        Draws an entity's attribute to the canvas.
+                        Not advised for typical use, simply due to complexity and instability.
+                        Better support to be added later.
+                      </p>
+                    </jse-docfn>
+                    <!-- drawHealth -->
+                    <jse-docfn>
+                      <b>drawHealth</b>
+                      <b class="disabled">instance.drawHealth(canvas)</b>
+                      <table>
+                        <thead>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Desc</th>
+                        </thead>
+                      </table>
+                      <tr>
+                        <tr>
+                          <td><code>canvas</code></td>
+                          <td>:<code><a href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D">canvas context</a>?</code></td>
+                          <td>Target canvas, typically the same one the entity is rendered to. If not provided, <code>game.graphics.canvas</code> is used by default.</td>
+                        </tr>
+                      </tr>
+                      <b>none</b>
+                      <b>
+                        Draws the entity's health to the target canvas. Handled automatically in the default <code>draw</code> method.
+                      </b>
+                    </jse-docfn>
+                  </details>
+                </details>
+                <details>
+                  <summary>player</summary>
+                  <p>Accessed as <code>game.entity.player</code></p>
+                  <p>
+                    Not to be confused with <code>game.player</code>,
+                    which is an <i>instance</i> of this class.<br>
+                    This is the class containing all the behaviors and data
+                    for the game's player. It extends the class <code>game.entity.livingEntity</code>.
+                    It is intended to only be instantiated precisely once,
+                    and may not work as intended otherwise.
+                  </p>
+                  <!-- Instance members -->
+                  <details>
+                    <summary>Instance members</summary>
+                    <ul>
+                      <li>
+                        <code>weaponKeybinds</code> :
+                        <code>{string: game.entity.player.weapon}</code> :
+                        Internal registry binding player weapons to keybinds, to allow for reconfiguration.
+                      </li>
+                      <li>
+                        <code>weapons</code> : <code>Array of game.entity.player.weapon</code> :
+                        Internal registry containing the player's various firing modes.
+                      </li>
+                      <li><code>score</code> : <code>number</code> : Arbitrary score increased by shooting down enemies.</li>
+                    </ul>
+                  </details>
+                  <!-- Methods -->
+                  <details>
+                    <summary>Methods</summary>
+                    <!-- Reset -->
+                    <jse-docfn>
+                      <b>reset</b>
+                      <b>game.player.reset()</b>
+                      <b>none</b>
+                      <p>
+                        Resets the player for a new game.
+                        Clears the base attributes to their defaults,
+                        but will not touch anything else.
+                      </p>
+                    </jse-docfn>
+                    <!-- Add weapon -->
+                    <jse-docfn>
+                      <b>addWeapon</b>
+                      <b>game.player.addWeapon(keybind, weapon)</b>
+                      <table>
+                        <thead>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Desc</th>
+                        </thead>
+                        <tr>
+                          <td><code>keybind</code></td>
+                          <td>:<code>string</code></td>
+                          <td>
+                            Key id for the button used to trigger this weapon.
+                            See <a href="https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values">the Mozilla documentation</a>
+                            for valid key strings.
+                          </td>
+                        </tr>
+                        <tr>
+                          <td><code>weapon</code></td>
+                          <td>:<code>game.entity.player.weapon</code></td>
+                          <td>Target canvas, typically the same one the entity is rendered to.</td>
+                        </tr>
+                      </table>
+                      <b>none</b>
+                      <p>
+                        Adds a new weapon to the player's list and registers it to trigger
+                        on the provided keybind.
+                      </p>
+                    </jse-docfn>
+                    <!-- Update -->
+                    <jse-docfn>
+                      <b class="disabled">update</b>
+                      <b>game.player.update(dt)</b>
+                      <table>
+                        <thead>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Desc</th>
+                        </thead>
+                        <tr>
+                          <td><code>dt</code></td>
+                          <td>:<code>number</code></td>
+                          <td>
+                            Time, in seconds, since the previous frame.
+                          </td>
+                        </tr>
+                      </table>
+                      <b>none</b>
+                      <p>
+                        Update function which handles collisions and player actions assigned to keybinds.
+                        Already called automatically in the core game loop, should not be called manually.
+                      </p>
+                    </jse-docfn>
+                    <!-- keydown -->
+                    <jse-docfn>
+                      <b>keydown</b>
+                      <b>game.player.keydown(key)</b>
+                      <table>
+                        <thead>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Desc</th>
+                        </thead>
+                        <tr>
+                          <td><code>key</code></td>
+                          <td>:<code>string</code></td>
+                          <td>
+                            Key code as specified by <a href="https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values">the Mozilla docs</a>.
+                          </td>
+                        </tr>
+                      </table>
+                      <b>none</b>
+                      <p>
+                        Callback function executed once when a key is pressed down.
+                        By default, activates weapons.
+                      </p>
+                    </jse-docfn>
+                  </details>
+                  <!-- Weapon class -->
+                  <details>
+                    <summary>Contained class: Weapon</summary>
+                    <!-- Instance members -->
+                    <details>
+                      <summary>Instance Members</summary>
+                      <ul>
+                        <li><code>ammo</code> : <code>number</code> : Decreases each time the weapon is fired. Weapon is disabled at 0. Each weapon has its own ammo pool.</li>
+                        <li>
+                          <code>offsets</code> : <code>Array&lt;[x: number, y: number]&gt;</code> :
+                          A list of vectors which offset firing locations by the specified number of pixels
+                          relative to the entity's current heading, just like <code>entityInstance.move(x, y)</code><br>
+                          These offsets are applied in a round-robin pattern, like a series of separate guns
+                          firing one at a time in order.
+                        </li>
+                        <li>
+                          <code>fire_fn</code> :
+                          <code>(string | function(timer: game.timer, lag: number, offset: [x: number, y: number]): game.entity.bullet)?</code> :
+                          Either a string referring to one of the bullet types registered in <code>game.entity.bullet.variants</code>
+                          or a function which takes the timer, lag time, and offset, then returns a new bullet entity.<br>
+                          It's far simpler in practice than it sounds. The default firing function, for example, is:<br>
+                          <code style="display: block;">
+                            def fire_fn(timer, lag, offset):<br>
+                            &Tab;return game.player.shoot("base", offset[0], offset[1])
+                          </code>
+                        </li>
+                        <li><code>barrel</code> : <code>number</code> : Index of the next offset to use when fired. Increments each time, resets to 0 when it exceeds the index of the final offset.</li>
+                        <li><code>rate</code> : <code>number</code> : Rate of fire, in shots per second. Does not restrict manual fire rate by default.</li>
+                        <li><code>auto</code> : <code>boolean</code> : If <code>true</code>, this weapon will fire repeatedly as long as the key is held. (more specifically: as long as <code>instance.sustain()</code> is called every frame)</li>
+                        <li><code>timer</code> : <code>game.timer</code> : Internal timer used for automatic fire.</li>
+                        <li><code>owner</code> : <code>game.entity</code> : Owner of this weapon. In the base game, always <code>game.player</code>.</li>
+                        <li>
+                          <code>compensate_lag</code> : <code>boolean</code> : (advanced)
+                          If <code>true</code>, a sub-frame update will be invoked on each bullet fired
+                          according to the delta time overshoot of the actual fire rate.
+                          In most cases, the bullet will jump forward slightly to match the position
+                          it would have if the frame rate were infinite.
+                        </li>
+                        <li><code>consume_ammo</code> : <code>number</code> : Ammunition consumed per shot.</li>
+                      </ul>
+                    </details>
+                    <!-- Methods -->
+                    <details>
+                      <summary>Methods</summary>
+                      <!-- Constructor -->
+                      <jse-docfn>
+                        <b>Constructor</b>
+                        <b>new game.entity.player.weapon(ammo, rate, auto, offsets, type, owner)</b>
+                        <table>
+                          <thead>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Desc</th>
+                          </thead>
+                          <tr>
+                            <td><code>ammo</code></td>
+                            <td>:<code>number?</code></td>
+                            <td>Starting ammunition. Defaults to 10.</td>
+                          </tr>
+                          <tr>
+                            <td><code>rate</code></td>
+                            <td>:<code>number?</code></td>
+                            <td>Shots per second if weapon auto-fires. Defaults to 10.</td>
+                          </tr>
+                          <tr>
+                            <td><code>auto</code></td>
+                            <td>:<code>boolean?</code></td>
+                            <td>If <code>true</code>, weapon will repeatedly fire while key is held. Defaults to <code>false</code>.</td>
+                          </tr>
+                          <tr>
+                            <td><code>offsets</code></td>
+                            <td>:<code>Array&lt;[x: number, y: number]&gt;?</code></td>
+                            <td>List of offsets relative to entity's heading. Bullets will be fired from these in sequence. Defaults to <code>[[-10, 0], [10, 0]]</code></td>
+                          </tr>
+                          <tr>
+                            <td><code>type</code></td>
+                            <td>:<code>(string | function(timer: game.timer, time: number, lag: number, offset: [x: number, y: number]))?</code></td>
+                            Either a string referring to one of the bullet types registered in <code>game.entity.bullet.variants</code>
+                            or a function which takes the timer, lag time, and offset, then returns a new bullet entity.<br>
+                            It's far simpler in practice than it sounds. The default firing function, for example, is:<br>
+                            <code style="display: block;">
+                              def fire_fn(timer, lag, offset):<br>
+                              &Tab;return game.player.shoot("base", offset[0], offset[1])
+                            </code>
+                          </tr>
+                          <tr>
+                            <td><code>owner</code></td>
+                            <td>:<code>game.entity?</code></td>
+                            <td>The <code>game.entity</code> that will be firing this weapon. Typically, this is <code>game.player</code>.</td>
+                          </tr>
+                        </table>
+                        <b>game.entity.player.weapon</b>
+                        <p>why</p>
+                      </jse-docfn>
+                      <!-- sustain -->
+                      <jse-docfn>
+                        <b>sustain</b>
+                        <b>instance.sustain()</b>
+                      <b>none</b>
+                      <p>
+                        If <code>instance.auto</code> is <code>true</code>, this can be called each frame
+                        to continue firing the weapon. If a frame elapses without being called,
+                        the weapon automatically ceases fire and resets to its resting state.<br>
+                        Allows weapon activation in <code>update()</code> without manually checking for state changes.<br>
+                        <code>def update(dt): if (keyIsPressed): weaponInstance.sustain()</code>
+                      </p>
+                      </jse-docfn>
+                      <!-- fire -->
+                      <jse-docfn>
+                        <b>fire</b>
+                        <b>instance.fire(timer, time, lag)</b>
+                        <table>
+                          <thead>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Desc</th>
+                          </thead>
+                          <tr>
+                            <td><code>timer</code></td>
+                            <td>:<code>game.timer?</code></td>
+                            <td>The timer associated to this weapon. Should always be <code>instance.timer</code>.</td>
+                          </tr>
+                          <tr>
+                            <td><code>time</code></td>
+                            <td>:<code>number?</code></td>
+                            <td>Exact time of firing. as provided by a <code>game.timer</code> instance. Defaults to 0.</td>
+                          </tr>
+                          <tr>
+                            <td><code>lag</code></td>
+                            <td>:<code>number?</code></td>
+                            <td>Interval between exact firing time and current frame time, in seconds. Used to compensate for lag and stabilize behavior.</td>
+                          </tr>
+                        </table>
+                        <b>returns</b>
+                        <p>
+                          Fires the weapon. Can be called without any parameters.
+                        </p>
+                      </jse-docfn>
+                      <!-- tick -->
+                      <jse-docfn>
+                        <b class="disabled">tick</b>
+                        <b>instance.tick(timer, time, lag)</b>
+                        <table>
+                          <thead>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Desc</th>
+                          </thead>
+                          <tr>
+                            <td><code>timer</code></td>
+                            <td>:<code>game.timer</code></td>
+                            <td>Should always be <code>instance.timer</code>.</td>
+                          </tr>
+                          <tr>
+                            <td><code>time</code></td>
+                            <td>:<code>number</code></td>
+                            <td>Exact timer of update, as provided by a <code>game.timer</code> instance.</td>
+                          </tr>
+                          <tr>
+                            <td><code>lag</code></td>
+                            <td>:<code>number</code></td>
+                            <td>Interval between exact firing time and current frame time, in seconds. Used to compensate for lag and stabilize behavior.</td>
+                          </tr>
+                        </table>
+                        <b>none</b>
+                        <p>
+                          Internal update function used by automatic weapons. When called, fires the weapon and updates its fire rate.
+                        </p>
+                      </jse-docfn>
+                    </details>
+                  </details>
+                </details>
+                <details>
+                  <summary>enemy</summary>
+                </details>
+                <details>
+                  <summary>bullet</summary>
+                </details>
+              </details>
+            </details>
+            <!-- Technical details -->
+            <details>
+              <summary>Technical details</summary>
+              <p>
+                Entities in this engine are divided into two main categories.
+                The basic <code>game.entities</code> list is sufficient for most purposes,
+                but for optimization, an additional <code>game.bullets</code> list
+                is provided which helps to reduce unnecessary calculations.
+              </p>
+              <p>
+                <code>game.player</code> is outside the entity lists entirely, handled
+                with special interaction cases built into the root entity framework
+                to provide seamless integration.
+              </p>
+              <p>
+                Addition and removal of entities is deferred until the end of each frame,
+                in fully encapsulated phases. This is intended to prevent unstable
+                interactions, such as mutation during traversal.
+                However, no such protection is provided to entity properties.
+              </p>
+            </details>
+          </details>
+          <style>
+            details.function>summary>text {
+              background-color: red;
+            }
+          </style>
+          <!-- Util -->
+          <details>
+            <summary>Utilities</summary>
+            <p>Accessed as <code>game.util</code></p>
+            <jse-docfn>
+              <b>isNumber</b>
+              <b>game.util.isNumber(n)</b>
+              <table>
+                <thead>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Desc</th>
+                </thead>
+                <tr>
+                  <td><code>n</code></td>
+                  <td>:<code>any</code></td>
+                  <td>The value to be tested</td>
+                </tr>
+              </table>
+              <b>boolean</b>
+              <p>
+                Returns <code>True</code> if <code>n</code> is a valid number in JavaScript,
+                <code>False</code> if it is a non-parseable number or <code>NaN</code>.
+              </p>
+            </jse-docfn>
+            <jse-docfn>
+              <b>lerp</b>
+              <b>game.util.lerp(v, a, b)</b>
+              <table>
+                <thead>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Desc</th>
+                </thead>
+                <tr>
+                  <td><code>v</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Interpolation factor in range [0-1]</td>
+                </tr><tr>
+                  <td><code>a</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Initial or minimum value (value returned when factor = 0)</td>
+                </tr><tr>
+                  <td><code>b</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Final or maximum value (value returned when factor = 1)</td>
+                </tr>
+              </table>
+              <b>number</b>
+              <p>Linear interpolation between two numbers. <code>v * (b - a) + a</code></p>
+            </jse-docfn>
+            <jse-docfn>
+              <b>clamp</b>
+              <b>game.util.clamp(v, a, b)</b>
+              <table>
+                <thead>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Desc</th>
+                </thead>
+                <tr>
+                  <td><code>v</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Input value</td>
+                </tr>
+                <tr>
+                  <td><code>min</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Minimum</td>
+                </tr>
+                <tr>
+                  <td><code>max</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Maximum</td>
+                </tr>
+              </table>
+              <b>number</b>
+              <p>Returns <code>v</code> clamped to the range of [min-max].</p>
+            </jse-docfn>
+            <jse-docfn>
+              <b>wrap</b>
+              <b>game.util.wrap(v, min, min)</b>
+              <table>
+                <thead><th>Name</th><th>Type</th><th>Desc</th></thead>
+                <tr>
+                  <td><code>v</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Input number to be wrapped</td>
+                </tr>
+                <tr>
+                  <td><code>min</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Minimum - inclusive</td>
+                </tr>
+                <tr>
+                  <td><code>max</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Maximum - not inclusive (ie no input will produce exactly max)</td>
+                </tr>
+              </table>
+              <b>number</b>
+              <p>
+                Clamps output within a range, wrapping back around each time
+                it exceeds either limit.<br>
+                Preferable to modulo as this version accounts correctly for negative
+                and floating point numbers.
+              </p>
+            </jse-docfn>
+            <jse-docfn>
+              <b><span style="color:#757770">pingpong</span></b>
+              <b>game.util.pingpong(v, min, min)</b>
+              <table>
+                <thead>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Desc</th>
+                </thead>
+                <tr>
+                  <td><code>v</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Input number to be wrapped</td>
+                </tr>
+                <tr>
+                  <td><code>min</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Minimum</td>
+                </tr>
+                <tr>
+                  <td><code>max</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Maximum</td>
+                </tr>
+              </table>
+              <b>number</b>
+              <p>
+                Not yet implemented, sorry. Raise an issue on Github if you need it sooner!
+              </p>
+            </jse-docfn>
+            <jse-docfn>
+              <b>sign</b>
+              <b>game.util.sign(n)</b>
+              <table>
+                <thead><th>Name</th><th>Type</th><th>Desc</th></thead>
+                <tr>
+                  <td><code>n</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Input number to be analyzed</td>
+                </tr>
+              </table>
+              <b>number</b>
+              <p>
+                Safely extracts the sign of a supplied value and returns it as a number (-1, 0, or 1).<br>
+                Invalid value types return 0. Boolean values are special-cased to return 0 and 1.
+              </p>
+            </jse-docfn>
+            <jse-docfn>
+              <b>signsOpposite</b>
+              <b>game.util.signsOpposite(a, b)</b>
+              <table>
+                <thead>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Desc</th>
+                </thead>
+                <tr>
+                  <td><code>a</code></td>
+                  <td>:<code>number</code></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td><code>b</code></td>
+                  <td>:<code>number</code></td>
+                  <td></td>
+                </tr>
+              </table>
+              <b>number</b>
+              <p>
+                Returns true if and only if both <code>a</code> and <code>b</code> are numbers with opposite signs.<br>
+                0 is counted as positive. Returns false if both are 0.
+              </p>
+            </jse-docfn>
+            <jse-docfn>
+              <b>loopLerp</b>
+              <b>game.util.loopLerp(v, a, b, min, max)</b>
+              <table>
+                <thead>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Desc</th>
+                </thead>
+                <tr>
+                  <td><code>v</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Interpolation factor</td>
+                </tr>
+                <tr>
+                  <td><code>a</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Initial value (v = 0)</td>
+                </tr>
+                <tr>
+                  <td><code>b</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Final value (v = 1)</td>
+                </tr>
+                <tr>
+                  <td><code>min</code></td>
+                  <td>:<code>number?</code></td>
+                  <td>Minimum value (output wraps when it drops below this threshold). 0 by default.</td>
+                </tr>
+                <tr>
+                  <td><code>max</code></td>
+                  <td>:<code>number?</code></td>
+                  <td>Maximum value (output wraps when it exceeds this threshold). 360 by default.</td>
+                </tr>
+              </table>
+              <b>number</b>
+              <p>
+                Unconventional <a href="https://en.wikipedia.org/wiki/Linear_interpolation">linear interpolation.</a><br>
+                Intended to handle interpolation of angles in the range of [0, 360].<br>
+                Includes special casing to return the maximum value when reasonable, unlike conventional wrapping.
+              </p>
+            </jse-docfn>
+            <jse-docfn>
+              <b>lerpVector</b>
+              <b>game.util.lerpVector(v, a, b)</b>
+              <table>
+                <thead>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Desc</th>
+                </thead>
+                <tr>
+                  <td><code>v</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Interpolation factor</td>
+                </tr>
+                <tr>
+                  <td><code>a</code></td>
+                  <td>:<code>Array of numbers</code></td>
+                  <td>Initial values (v = 0)</td>
+                </tr>
+                <tr>
+                  <td><code>b</code></td>
+                  <td>:<code>Array of numbers</code></td>
+                  <td>Final values (v = 1)</td>
+                </tr>
+              </table>
+              <b>Array of numbers</b>
+              <p>
+                Linear interpolation between vectors, provided in component form as arrays.<br>
+                Adapts to any dimensionality (array length) of parameters.
+                Uses the minimum dimensionality/length as the output,
+                ignoring all other components even at 0 and 1.
+              </p>
+            </jse-docfn>
+            <jse-docfn>
+              <b style="color:#757770;">lerpWrap</b>
+              <b>game.util.lerpWrap(v, a, b, wrap)</b>
+              <table>
+                <thead>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Desc</th>
+                </thead>
+                <tr>
+                  <td><code>v</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Interpolation factor</td>
+                </tr>
+                <tr>
+                  <td><code>a</code></td>
+                  <td>:<code>Array of numbers</code></td>
+                  <td>Initial values (v = 0)</td>
+                </tr>
+                <tr>
+                  <td><code>b</code></td>
+                  <td>:<code>Array of numbers</code></td>
+                  <td>Final values (v = 1)</td>
+                </tr>
+                <tr>
+                  <td><code>wrap</code></td>
+                  <td>:<code>Array&lt;[minimum: number, maximum: number]&gt;</code></td>
+                  <td>Ranges for each component of the inputs.</td>
+                </tr>
+              </table>
+              <b>Array of numbers</b>
+              <p>
+                Linear interpolation between vectors provided as arrays of numbers.<br>
+                Generally not advised due to its specialization and unconventionality.<br>
+                Similar to <code>game.util.lerpVector()</code>, but wraps results like <code>game.util.lerpWrap()</code>.<br>
+                Originally built for HSLA formatted colors.
+              </p>
+            </jse-docfn>
+            <jse-docfn>
+              <b style="color:#757770;">multigrad</b>
+              <b>game.util.multigrad(v, targets, fn)</b>
+              <table>
+                <thead>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Desc</th>
+                </thead>
+                <tr>
+                  <td><code>v</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Interpolation factor</td>
+                </tr>
+                <tr>
+                  <td><code>targets</code></td>
+                  <td>:<code>Array&lt;[location: number, value: number]&gt;</code></td>
+                  <td>Gradient stops</td>
+                </tr>
+                <tr>
+                  <td><code>fn</code></td>
+                  <td>:<code>(optional) function(number, number, number): number</code></td>
+                  <td>Interpolation function. If none is provided, uses <code>game.util.lerp()</code> by default.</td>
+                </tr>
+              </table>
+              <b>Array of numbers</b>
+              <p>
+                Interpolates along a gradient of numbers with multiple stops.<br>
+                Each stop has a location and a value. As the factor approaches a stop location,
+                the output will approach that stop's value.<br>
+                If provided <code>game.util.lerpVector</code> as an interpolation function,
+                stop values can be array vectors, which is useful for interpolating between colors.
+              </p>
+            </jse-docfn>
+            <jse-docfn>
+              <b>csstorgb</b>
+              <b>game.util.csstorgb(str)</b>
+              <table>
+                <thead>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Desc</th>
+                </thead>
+                <tr>
+                  <td><code>str</code></td>
+                  <td>:<code>string</code></td>
+                  <td>A string corresponding to a css color value, such as <code>darkred</code> or <code>#122D1E</code>.</td>
+                </tr>
+              </table>
+              <b>Array of numbers</b>
+              <p>
+                Translates a css color string to an array of rgb(a) components.
+              </p>
+            </jse-docfn>
+            <jse-docfn>
+              <b>rgbtohsl</b>
+              <b>game.util.rgbtohsl(r, g, b, a, standardPrecision)</b>
+              <table>
+                <thead>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Desc</th>
+                </thead>
+                <tr>
+                  <td><code>r</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Red component in range [0, 255]</td>
+                </tr>
+                <tr>
+                  <td><code>g</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Green component in range [0, 255]</td>
+                </tr>
+                <tr>
+                  <td><code>b</code></td>
+                  <td>:<code>number</code></td>
+                  <td>Blue component in range [0, 255]</td>
+                </tr>
+                <tr>
+                  <td><code>a</code></td>
+                  <td>:<code>number?</code></td>
+                  <td>Alpha component in range [0, 1]. Presumed 1 by default.</td>
+                </tr>
+                <tr>
+                  <td><code>standardPrecision</code></td>
+                  <td>:<code>boolean?</code></td>
+                  <td>If provided, restricts all components to a single decimal place of precision, preventing such horrors as <code>[130, 80, 48.000000000000000004, 1]</code>.</td>
+                </tr>
+              </table>
+              <b>Array of numbers</b>
+              <p>
+                Converts rgb(a) formatted colors <code>[0-255, 0-255, 0-255, 0-1]</code> to
+                hsl(a) format <code>[0-360, 0-100, 0-100, 0-1]</code>.
+              </p>
+            </jse-docfn>
+            <jse-docfn>
+              <b>cssColor</b>
+              <b>game.util.cssColor(color, hsl)</b>
+              <table>
+                <thead>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Desc</th>
+                </thead>
+                <tr>
+                  <td><code>color</code></td>
+                  <td>:<code>[r/h: number, g/s: number, b/l: number, a: number?]</code></td>
+                  <td>
+                    Color as an array of components, either in rgb(a)<br>
+                    (with components in ranges [0-255, 0-255, 0-255, 0-1])<br>
+                    or in hsl(a) format<br>
+                    (with components in ranges [0-360, 0-100, 0-100, 0-1]).<br>
+                    Alpha defaults to 1 if not supplied.
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>hsl</code></td>
+                  <td>:<code>boolean?</code></td>
+                  <td>If true, interprets <code>color</code> in hsl(a) format rather than rgb(a).</td>
+                </tr>
+              </table>
+              <b>string</b>
+              <p>
+                Serializes an array of color channels into a valid css color function string,<br>
+                such as: <code>rgba(211, 94, 218, 1)</code>
+              </p>
+            </jse-docfn>
+            <!-- objects -->
+            <h2>Classes</h2>
+            <details>
+              <summary>Smoothed Value</summary>
+              <p>Accessed as <code>game.util.smoothVal</code></p>
+              <p>
+                A fully automated value interpolation system.
+                Built to provide set-and-forget functionality,
+                avoiding manual interpolation of every value in the update function.<br>
+                Uses soft references, so instances do not need to be manually disposed.
+              </p>
+              <details>
+                <summary><b>Instance Members</b></summary>
+                <ul>
+                  <li><code>val</code> : <code>number</code> : Target value for interpolation.</li>
+                  <li><code>smoothed</code> : <code>number</code> : Output from interpolation. Smoothly approaches target value each frame at a set rate.</li>
+                  <li><code>prevSmoothed</code> : <code>number</code> : Record of <code>this.smoothed</code> from the previous frame. Provided as a utility.</li>
+                  <li><code>prev</code> : <code>number</code> : Record of <code>this.val</code> from the previous frame. Provided as a utility.</li>
+                  <li><code>min</code> : <code>number</code> : Minimum expected value.</li>
+                  <li><code>max</code> : <code>number</code> : Maximum expected value. Interpolation rate is determined by the formula <code>(this.max - this.min) / this.time</code>.</li>
+                  <li><code>time</code> : <code>number</code> : Time required (in seconds) for the smoothed value to transition all the way from <code>this.min</code> to <code>this.max</code> and vice-versa.</li>
+                  <li><code>clamp</code> : <code>boolean</code> : If true, <code>this.smoothed</code> will be clamped to the interval defined by <code>this.min</code> and <code>this.max</code>. <code>true</code> by default.</li>
+                </ul>
+              </details>
+              <jse-docfn>
+                <b>constructor</b>
+                <b>new game.util.smoothVal(val, min, max, time, auto)</b>
+                <table>
+                  <thead>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Desc</th>
+                  </thead>
+                  <tr>
+                    <td><code>val</code></td>
+                    <td>:<code>number</code></td>
+                    <td>Initial value</td>
+                  </tr>
+                  <tr>
+                    <td><code>min</code></td>
+                    <td>:<code>number</code></td>
+                    <td>Minimum expected value</td>
+                  </tr>
+                  <tr>
+                    <td><code>max</code></td>
+                    <td>:<code>number</code></td>
+                    <td>Maximum expected value</td>
+                  </tr>
+                  <tr>
+                    <td><code>time</code></td>
+                    <td>:<code>number?</code></td>
+                    <td>
+                      Time (in seconds) to interpolate from <code>min</code>
+                      all the way to <code>max</code> or vice-versa.
+                      Defaults to 1 if not provided.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><code>auto</code></td>
+                    <td>:<code>boolean?</code></td>
+                    <td>
+                      If <code>true</code> (default), registers this object to be automatically updated each frame.<br>
+                      Otherwise, <code>instance.update(dt)</code> must be manually called each frame.<br>
+                      Defaults to <code>true</code> if not provided.<br>
+                    </td>
+                  </tr>
+                </table>
+                <b>game.util.smoothVal</b>
+              </jse-docfn>
+              <jse-docfn>
+                <b>update</b>
+                <b>instance.update(dt)</b>
+                <table>
+                  <thead>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Desc</th>
+                  </thead>
+                  <tr>
+                    <td><code>dt</code></td>
+                    <td>:<code>number</code></td>
+                    <td>Delta time (in seconds)</td>
+                  </tr>
+                </table>
+                <b>none</b>
+                <p>
+                  Must be called each frame if not automatically registered.<br>
+                  Handles the interpolation process this class is built for.
+                </p>
+              </jse-docfn>
+              <jse-docfn>
+                <b style="color:#757770;">Core update</b>
+                <b>game.util.smoothVal.coreUpdate(dt)</b>
+                <table>
+                  <thead>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Desc</th>
+                  </thead>
+                  <tr>
+                    <td><code>dt</code></td>
+                    <td>:<code>number</code></td>
+                    <td>Delta time (in seconds)</td>
+                  </tr>
+                </table>
+                <b>none</b>
+                <p>
+                  Internal static method which handles updating all registered instances.<br>
+                  This is already called in the core system update, so should not be called manually.
+                </p>
+              </jse-docfn>
+            </details>
+            <details>
+              <summary>Gradient</summary>
+              <p>Accessed as <code>game.util.gradient</code></p>
+              <p>
+                A multi-stop gradient object with a persistent state for optimization.<br>
+                Handles HSL[A] or RGB[A]. In HSL mode, H is wrapped at 0-360.<br>
+                Each stop is in the format [factor, color], where color is an array of
+                components. For convenience, colors are transformed on construction,
+                allowing use of CSS color strings.
+              </p>
+              <details>
+                <summary>Instance Members</summary>
+                <ul>
+                  <li><code>caret</code> : <code>number</code> : A persistent position marker along the gradient. Optimizes calculation when reading from the same or similar positions multiple times.</li>
+                  <li><code>current</code> : <code>[r, g, b, a]</code> or <code>[h, s, l, a]</code> : Current color read at the caret position.</li>
+                  <li><code>prev</code> : <code>[r, g, b, a]</code> or <code>[h, s, l, a]</code> : Color at the last-read caret position.</li>
+                  <li><code>interpolator</code> : <code>function(fac: number, start: number, end: number): number</code> : The interpolation function used for each component of the values at stops. By default, this is <code>game.util.lerp</code>.</li>
+                  <li><code>hsl</code> : <code>boolean</code> : Toggles hsla mode. By default, this is <code>true</code>.</li>
+                  <li><code>cssColor</code> : <code>string</code> : Provides a serialization of the object's current color suitable for use in css.</li>
+                  <li><code>r</code> : <code>number</code> : Red component of the current color. (if rgba mode)</li>
+                  <li><code>g</code> : <code>number</code> : Green component of the current color. (if rgba mode)</li>
+                  <li><code>b</code> : <code>number</code> : Blue component of the current color. (if rgba mode)</li>
+                  <li><code>h</code> : <code>number</code> : Hue component of the current color. (if hsla mode)</li>
+                  <li><code>s</code> : <code>number</code> : Saturation component of the current color. (if hsla mode)</li>
+                  <li><code>l</code> : <code>number</code> : Lightness component of the current color. (if hsla mode)</li>
+                  <li><code>a</code> : <code>number</code> : Alpha component of the current color.</li>
+                  <li><code>lastR</code> : <code>number</code> : Red component of the most recently calculated position. (if rgba mode)</li>
+                  <li><code>lastG</code> : <code>number</code> : Green component of the most recently calculated position. (if rgba mode)</li>
+                  <li><code>lastB</code> : <code>number</code> : Blue component of the most recently calculated position. (if rgba mode)</li>
+                  <li><code>lastH</code> : <code>number</code> : Hue component of the most recently calculated position. (if hsla mode)</li>
+                  <li><code>lastS</code> : <code>number</code> : Saturation component of the most recently calculated position. (if hsla mode)</li>
+                  <li><code>lastL</code> : <code>number</code> : Lightness component of the most recently calculated position. (if hsla mode)</li>
+                  <li><code>lastA</code> : <code>number</code> : Alpha component of the most recently calculated position.</li>
+                </ul>
+              </details>
+              <jse-docfn>
+                <b>Constructor</b>
+                <b>new game.util.gradient(...stops)</b>
+                <table>
+                  <thead>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Desc</th>
+                  </thead>
+                  <tr>
+                    <td><code>stops</code></td>
+                    <td>:<code>Varargs: [position: number, color: string]</code></td>
+                    <td>Initial value</td>
+                  </tr>
+                </table>
+                <b>game.util.gradient</b>
+                <p>
+                  Any number of gradient stops. Best described by example:<br>
+                  <code>grad = new game.util.gradient([0, "red"], [0.5, "yellow"], [1, "green"])</code><br>
+                  This would create a gradient from red to green, passing through yellow on the way - like an indicator or traffic light.
+                </p>
+              </jse-docfn>
+              <jse-docfn>
+                <b>getInterval</b>
+                <b>instance.getInterval(fac, out, prev, next)</b>
+                <table>
+                  <thead>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Desc</th>
+                  </thead>
+                  <tr>
+                    <td><code>fac</code></td>
+                    <td>:<code>number</code></td>
+                    <td>Interpolation factor</td>
+                  </tr>
+                  <tr>
+                    <td><code>out</code></td>
+                    <td>:<code>Array&lt;[number, Array&lt;number&gt;]&gt;?</code></td>
+                    <td>
+                      An array to store outputs; if provided, it will be overwritten.
+                      This prevents a new array from being created needlessly.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><code>prev</code></td>
+                    <td>:<code>[number, Array&lt;number&gt;]?</code></td>
+                    <td>Cached lower stop, only used to optimize interval selection.</td>
+                  </tr>
+                  <tr>
+                    <td><code>next</code></td>
+                    <td>:<code>[number, Array&lt;number&gt;]?</code></td>
+                    <td>Cached upper stop, only used to optimize interval selection.</td>
+                  </tr>
+                </table>
+                <b>[prev: [number, Array&lt;number&gt;], next: [number, Array&lt;number&gt;]]</b>
+                <p>
+                  Searches for the containing interval of the supplied input factor.<br>
+                  Makes use of cached values if provided, which can shorten
+                  the search in cases of repeated similar calculation.<br>
+                  Returns the beginning and end of the appropriate interval,
+                  which can be cached and passed as arguments in the future.
+                </p>
+              </jse-docfn>
+              <jse-docfn>
+                <b>interpolateInterval</b>
+                <b>instance.interpolateInterval(fac, prev, next, out)</b>
+                <table>
+                  <thead>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Desc</th>
+                  </thead>
+                  <tr>
+                    <td><code>fac</code></td>
+                    <td>:<code>number</code></td>
+                    <td>Interpolation factor, from previous to next stop position. (not 0-1)</td>
+                  </tr>
+                  <tr>
+                    <td><code>prev</code></td>
+                    <td>:<code>[position: number, value: Array&lt;number&gt;]</code></td>
+                    <td>Previous stop. Position must be less than or equal to factor.</td>
+                  </tr>
+                  <tr>
+                    <td><code>next</code></td>
+                    <td>:<code>[position: number, value: Array&lt;number&gt;]</code></td>
+                    <td>Next stop. Position must be greater than or equal to factor.</td>
+                  </tr>
+                  <tr>
+                    <td><code>out</code></td>
+                    <td>:<code>Array&lt;number&gt;?</code></td>
+                    <td>Optional output array whose contents will be replaced with the result.</td>
+                  </tr>
+                </table>
+                <b>Array&lt;number&gt;</b>
+                <p>
+                  Primarily an internal function. Interpolates along a single provided interval
+                  using the set interpolator of the object.
+                </p>
+              </jse-docfn>
+              <jse-docfn>
+                <b>read</b>
+                <b>instance.read(fac, out, prev, next)</b>
+                <table>
+                  <thead>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Desc</th>
+                  </thead>
+                  <tr>
+                    <td><code>fac</code></td>
+                    <td>:<code>number</code></td>
+                    <td>Position on the gradient to read from</td>
+                  </tr>
+                  <tr>
+                    <td><code>out</code></td>
+                    <td>:<code>Array&lt;number&gt;?</code></td>
+                    <td>Optional target array to write the output into.</td>
+                  </tr>
+                  <tr>
+                    <td><code>prev</code></td>
+                    <td>:<code>[position: number, value: Array&lt;number&gt;]?</code></td>
+                    <td>Optional cached "previous" stop. May cut the search short, improving performance.</td>
+                  </tr>
+                  <tr>
+                    <td><code>next</code></td>
+                    <td>:<code>[position: number, value: Array&lt;number&gt;]?</code></td>
+                    <td>Optional cached "next" stop. May cut the search short, improving performance.</td>
+                  </tr>
+                </table>
+                <b>Array&lt;number&gt;</b>
+                <p>
+                  Main function of the gradient object.
+                  Reads the value at any given position along the gradient.
+                </p>
+              </jse-docfn>
             </details>
           </details>
         </hgroup>
+      </div>
+      <div id="game" style="width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center;">
+        <summary>
+          Test your modifications in play
+        </summary>
+        <div style="width: 900px; height: 600px; position: relative;">
+          <canvas id="game-canvas"></canvas>
+          <div id="game-ui-layer"></div>
+        </div>
+      </div>
+      <div title="Editor" style="height: 100%;">
+        <summary>
+          Modify the game with Python
+        </summary>
+        <div id="editor" style="height: 100%;"></div>
+      </div>
+      <div title="Console" style="height: 100%;">
+        <summary>
+          Error log and output for <code>print()</code>
+        </summary>
+        <div id="console" style="height: 100%;"></div>
       </div>
     </jse-new-tabbed-panel>
     <div style="display: none; width: 100%; height: 100%;">
@@ -391,6 +2045,7 @@ this.forward(100 * dt)</code>
       </div> -->
     </div>
     <scripts id="scripts">
+      <script src="./elements.js"></script>
       <script src="./defaultpy.js"></script>
       <script src="./victor.min.js"></script>
       <script>
@@ -435,6 +2090,48 @@ this.forward(100 * dt)</code>
       <script src="./entity.js"></script>
       <script src="./gamecore.js"></script>
       <script src="./main.js"></script>
+      <script>
+        // customElements.define(
+        //   "jse-docfn",
+        //   class Why extends HTMLElement {
+        //     constructor() {
+        //       super();
+        //     }
+        //     static findElementByNameCondition(name, element) {
+        //       return element.name == name ? element : null;
+        //     }
+        //     /**
+        //      * @return {HTMLElement}
+        //      */
+        //     findElementByCondition(state, element = null, condition = null) {
+        //       element ??= this;
+        //       condition ??= Why.findElementByNameCondition;
+        //       let ret, v;
+        //       for (let i = 0; i < element.children.length; i++) {
+        //         v = element.children[i];
+        //         if (condition(state, v)) return v;
+        //         ret = this.findElementByCondition(state, v, condition);
+        //         if (ret) return ret;
+        //       }
+        //     }
+        //     static slotLinks = [
+        //       "name", "def", "params", "returns", "desc"
+        //     ];
+        //     connectedCallback() {
+        //       let slots = this.__proto__.constructor.slotLinks;
+        //       let cache = [];
+        //       for (let i = 0; i < slots.length; i++) {
+        //         cache.push(this.children[i]);
+        //       }
+        //       this.replaceChildren();
+        //       this.appendChild(document.getElementById("doc-fn").content.cloneNode(true));
+        //       for (let i = 0; i < slots.length; i++) {
+        //         if (cache[i]) this.findElementByCondition(slots[i]).replaceWith(cache[i]);
+        //       }
+        //     }
+        //   }
+        // );
+      </script>
     </scripts>
   </body>
 </html>
