@@ -229,17 +229,18 @@ class JSENewTabbedPanel extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({mode: "open"});
-    this.shadowRoot.append(jslib.buildElement("link", {
+    this.shadowRoot.append(JSLib2.build("link", {
       rel: "stylesheet",
       type: "text/css",
       href: "./JSEStyles/JSETabContainer.css",
     }));
-    this.navbar = jslib.buildElement("nav");
+    this.navbar = JSLib2.build("nav");
     this.shadowRoot.append(this.navbar);
-    this.body = jslib.buildElement("main");
+    this.body = JSLib2.build("main");
     this.shadowRoot.append(this.body);
     this.__id = JSENewTabbedPanel.__id++;
   }
+  
   updateNodes(nodes) {
     for (let node of nodes) {
       if (node.nodeType === Node.ELEMENT_NODE) {
@@ -254,7 +255,7 @@ class JSENewTabbedPanel extends HTMLElement {
   }
 
   connectedCallback() {
-    jslib.setCSS(this, {
+    JSLib2.style(this, {
       width: "100%",
       height: "100%",
       position: "relative",
@@ -294,7 +295,7 @@ class JSENewTabbedPanel extends HTMLElement {
       title ||= "New Tab"; // Default if no others specified
       this.title = title;
 
-      this.label = jslib.buildElement("div", {
+      this.label = JSLib2.build("div", {
         class: "jse-tab prevent-select",
         textContent: title,
         style: {
@@ -310,7 +311,7 @@ class JSENewTabbedPanel extends HTMLElement {
       }
       if (tooltip) {
         tooltip.remove();
-        this.tooltip = jslib.buildElement("div", {
+        this.tooltip = JSLib2.build("div", {
           class: "jse-tab-tooltip",
           style: {
             position: "absolute"
@@ -356,6 +357,9 @@ class JSENewTabbedPanel extends HTMLElement {
     this.body.append(tab.content);
     if (this.tabs.length < 2) {
       this.setTab(tab);
+    } else {
+      let usrstoreid = `JSENewTabbedPanel#${this.__id}.tabState`;
+      if (window.localStorage.getItem(usrstoreid) == tab.title) this.setTab(tab);
     }
     return tab;
   }
@@ -364,6 +368,10 @@ class JSENewTabbedPanel extends HTMLElement {
     if (tab instanceof JSENewTabbedPanel.tab) {
       this.lastTab?.deactivate();
       tab.activate();
+      if (this.tabs.length > 1) {
+        let usrstoreid = `JSENewTabbedPanel#${this.__id}.tabState`;
+        window.localStorage.setItem(usrstoreid, tab.title);
+      }
       this.lastTab = tab;
       return tab;
     }

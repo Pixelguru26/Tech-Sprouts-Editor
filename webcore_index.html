@@ -33,6 +33,34 @@
         /* Standard syntax */
         user-select: none;
       }
+    
+      .button {
+        background-color: #122D1E;
+        color: white;
+        font-weight: bold;
+        padding: 6px 18px;
+        border-radius: 5px;
+        font-size: 17px;
+        user-select: none;
+        border: none;
+        vertical-align: middle;
+        text-align: center;
+        cursor: pointer;
+        white-space: nowrap;
+        margin-top: 2px;
+        margin-bottom: 2px;
+      }
+  
+      .button:hover {
+        background-color: #1C4D3D;
+      }
+  
+      .button:active {
+        padding: 8px 18px 4px 18px;
+        background-color: #122D1E;
+        color: lightslategrey;
+        box-shadow: 0 2px #07150D inset;
+      }
 
       scripts {
         display: none;
@@ -40,7 +68,8 @@
     </style>
   </head>
   <body>
-    <script src="./jslib.js"></script>
+    <script src="./JSLib/fix.js"></script>
+    <script src="./JSLib/lib.js"></script>
     <template id="template-doc-fn-param">
       <tr>
         <td>
@@ -69,18 +98,22 @@
         <slot name="desc"></slot>
       </details>
     </template>
+    <!-- ========================================== -->
+     <!-- This effectively contains the entire page's contents -->
     <jse-new-tabbed-panel id="tabpanel" style="height: 100%;">
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-      <style>      
+      <style>
         #game-canvas {
           margin: 0 auto;
           display: block;
-        }
-        
-        #game-canvas {
           width: 900px;
           height: 600px;
           background-color: black;
+          transition: border-radius 1s;
+          border-radius: 10px;
+        }
+        .canvas-hover {
+          border-radius: 0 !important;
         }
         #game-ui-layer {
           position: absolute;
@@ -89,6 +122,13 @@
           left: 0;
           right: 0;
           bottom: 0;
+          box-shadow: inset 0px 4px 4px rgba(0, 0, 0, 0.5);
+          border-radius: 10px;
+          transition: border-radius 1s, box-shadow 1s;
+        }
+        #game-ui-layer:hover {
+          border-radius: 0;
+          box-shadow: none;
         }
     
         .button {
@@ -110,7 +150,6 @@
     
         .button:hover {
           background-color: #1C4D3D;
-    
         }
     
         .button:active {
@@ -168,6 +207,77 @@
           text-shadow: 0px 0px 4px white;
         }
 
+        i {
+          text-shadow: none;
+          transition: text-shadow .5s;
+        }
+        i:hover {
+          text-shadow: 0px 0px 4px white;
+        }
+
+        @keyframes logosticker-pulsate {
+          0% { filter: drop-shadow(0px 0px 3px white) drop-shadow(0px 0px 1px yellow); }
+          50% { filter: drop-shadow(0px 0px 1px white); }
+          100% { filter: drop-shadow(0px 0px 3px white) drop-shadow(0px 0px 1px yellow); }
+        }
+        @keyframes link-open {
+          0% {
+            opacity: 0;
+            width: 0;
+          }
+          10% {
+            opacity: 100%;
+          }
+          100% {
+            width: 16ch;
+            opacity: 100%;
+          }
+        }
+        @keyframes link-flash {
+          0% {
+            text-shadow: 0px 0px 4px white;
+          }
+          25% {
+            text-shadow: 0px 0px 8px white, 0px 0px 4px yellow;
+          }
+          100% {
+            text-shadow: 0px 0px 4px white;
+          }
+        }
+        @keyframes link-close {
+          0% {
+            opacity: 100%;
+            width: 16ch;
+          }
+          90% {
+            opacity: 100%;
+            width: 0;
+          }
+          100% {
+            width: 0;
+            opacity: 0;
+          }
+        }
+        .logostickerlogo {
+          filter: drop-shadow(0px 0px 3px white);
+          animation-name: logosticker-pulsate;
+          animation-duration: 15s;
+          animation-iteration-count: infinite;
+        }
+        .logostickerlink {
+          overflow: hidden;
+          text-wrap-mode: nowrap;
+          text-align:center;
+          opacity: 0;
+          width: 0;
+        }
+        .logostickerlink-closeable {
+          animation: link-close 1s forwards;
+        }
+        .logosticker:hover>.logostickerlink {
+          animation: link-open 1s forwards, 1s link-flash 1s;
+        }
+
         #unsaved {
           visibility: hidden;
           float: right;
@@ -177,6 +287,16 @@
         #unsaved.active {
           visibility: visible;
           opacity: 1;
+        }
+
+        #console-input {
+          flex-basis: 4ch;
+          background-color: #272822;
+          box-shadow: inset 0 4px 4px black;
+          align-content: center;
+          &::before {
+            content: "> ";
+          }
         }
       </style>
       <div title="Docs" , style="width: 100%; height: 100%; overflow-y: scroll; overflow-wrap: anywhere;">
@@ -253,10 +373,17 @@
           .disabled {
             color: #757770;
           }
+          *:link {
+            color: white;
+            text-shadow: 0 0 4px white;
+          }
+          *:visited {
+            color: white;
+          }
         </style>
         <hgroup id="docs-game">
           <!-- Game Object -->
-          <details>
+          <details id="docs-game-object">
             <summary>Game Object</summary>
             <p>
               All access to game functionality, input, and output,
@@ -271,7 +398,7 @@
             </p>
           </details>
           <!-- State Control -->
-          <details>
+          <details id="docs-state-control">
             <summary>State Control</summary>
             <p>
               The central system controlling what code
@@ -301,7 +428,7 @@
             </p>
           </details>
           <!-- Entities -->
-          <details open>
+          <details id="docs-entities">
             <summary>Entities</summary>
             <p>Accessed as <code>game.entity</code></p>
             <!-- Intro -->
@@ -837,6 +964,7 @@
               </details>
               <details>
                 <summary>Subclasses</summary>
+                <!-- livingEntity -->
                 <details>
                   <summary>livingEntity</summary>
                   <p>Accessed as <code>game.entity.livingEntity</code></p>
@@ -957,6 +1085,7 @@
                     </jse-docfn>
                   </details>
                 </details>
+                <!-- Player -->
                 <details>
                   <summary>player</summary>
                   <p>Accessed as <code>game.entity.player</code></p>
@@ -1250,11 +1379,226 @@
                     </details>
                   </details>
                 </details>
+                <!-- Enemy -->
                 <details>
                   <summary>enemy</summary>
                 </details>
+                <!-- Bullet -->
                 <details>
                   <summary>bullet</summary>
+                  <p>Accessed as <code>game.entity.bullet</code></p>
+                  <p>
+                    Base class from which all projectiles inherit.
+                    By default, bullets simply travel in a straight line
+                    at their set speed.
+                  </p>
+                  <p>
+                    In the game engine, bullets are simulated as moving points
+                    which create a short line segment each frame.
+                    At the beginning of the frame, the bullet's position is recorded
+                    and is used as the starting point of the line segment.
+                    The bullet is then moved forward a certain distance determined by
+                    its speed (more precisely, velocity in pixels per second
+                    multiplied by the duration of the frame, in seconds).
+                    The ending point of the line segment is placed at this new position.
+                    Other shapes can then be tested for intersection with the new line
+                    segment to determine if the bullet made contact.<br>
+                    This method, called <i>continuous collision detection</i>,
+                    is useful as it prevents bullets from "skipping" through objects
+                    at low frame rates, where it may move a significant distance each
+                    frame without testing for collisions along the way.
+                    (discrete collision detection)
+                  </p>
+                  <!-- Static members -->
+                  <details>
+                    <summary>Static members</summary>
+                    <ul>
+                      <li><code>type</code> : <code>string</code> : value: <code>"bullet_base"</code></li>
+                      <li><code>default_speed</code> : <code>number</code> : value: <code>1024</code> : Default speed of new bullet instances, in pixels per second.</li>
+                      <li><code>default_damage</code> : <code>number</code> : Default damage done by new bullet instances.</li>
+                      <li><code>variants</code> : <code>{string: game.entity.bullet}</code> : A registry of bullet types by string key, used by certain methods such as <code>instance.shoot()</code>.</li>
+                    </ul>
+                  </details>
+                  <!-- Instance members -->
+                  <details>
+                    <summary>Instance Members</summary>
+                    <ul>
+                      <li><code>attack</code> : <code>number</code> : Damage dealt on impact.</li>
+                      <li><code>speed</code> : <code>number</code> : Speed of travel in pixels per second.</li>
+                    </ul>
+                  </details>
+                  <!-- Methods -->
+                  <details>
+                    <summary>Methods</summary>
+                    <!-- Constructor -->
+                    <jse-docfn>
+                      <b>Constructor</b>
+                      <b>new game.entity.bullet(team, x, y, angle)</b>
+                      <table>
+                        <thead>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Desc</th>
+                        </thead>
+                        <tr>
+                          <td><code>team</code></td>
+                          <td>:<code>string</code></td>
+                          <td>Team assigned to the new bullet. See <code>game.entity.teams</code></td>
+                        </tr>
+                        <tr>
+                          <td><code>x</code></td>
+                          <td>:<code>number</code></td>
+                          <td>x position of the new bullet's starting point, in pixels. Also sets initial end point.</td>
+                        </tr>
+                        <tr>
+                          <td><code>y</code></td>
+                          <td>:<code>number</code></td>
+                          <td>y position of the new bullet's starting point, in pixels down from the top of the screen. Also sets initial end point.</td>
+                        </tr>
+                        <tr>
+                          <td><code>angle</code></td>
+                          <td>:<code>number</code></td>
+                          <td>Angle clockwise from screen east (directly right) in degrees.</td>
+                        </tr>
+                      </table>
+                      <b>game.entity.bullet</b>
+                      <p>
+                        Constructs a new bullet entity with default attributes.
+                      </p>
+                    </jse-docfn>
+                    <!-- Update -->
+                    <jse-docfn>
+                      <b class="disabled">update</b>
+                      <b>instance.update(dt)</b>
+                      <table>
+                        <thead>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Desc</th>
+                        </thead>
+                        <tr>
+                          <td><code>dt</code></td>
+                          <td>:<code>number</code></td>
+                          <td>Time, in seconds, since the last frame.</td>
+                        </tr>
+                      </table>
+                      <b>none</b>
+                      <p>
+                        Update function called every frame. Should not be called
+                        manually, except when overridden by derived classes.
+                      </p>
+                    </jse-docfn>
+                    <!-- Draw -->
+                    <jse-docfn>
+                      <b class="disabled">draw</b>
+                      <b>instance.draw(canvas)</b>
+                      <table>
+                        <thead>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Desc</th>
+                        </thead>
+                        <tr>
+                          <td><code>canvas</code></td>
+                          <td>:<code><a href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D">canvas context</a></code>?</td>
+                          <td>Canvas target to render the bullet to. Defaults to <code>game.graphics.canvas</code></td>
+                        </tr>
+                      </table>
+                      <b>none</b>
+                      <p>
+                        The rendering method which draws the bullet to the screen.
+                        Simply draws <code>instance.sprite</code> to the screen
+                        centered on the bullet's current location. The main difference
+                        from the base entity render method is that the image centers
+                        on the end point of the line collider instead of its midpoint.
+                      </p>
+                    </jse-docfn>
+                    <!-- Touch -->
+                    <jse-docfn>
+                      <b>touch</b>
+                      <b>instance.touch(target)</b>
+                      <table>
+                        <thead>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Desc</th>
+                        </thead>
+                        <tr>
+                          <td><code>target</code></td>
+                          <td>:<code>game.entity</code></td>
+                          <td>Entity this bullet may do damage to if the team relationship is hostile.</td>
+                        </tr>
+                      </table>
+                      <b>none</b>
+                      <p>
+                        Calls <code>instance.impact(target)</code> on the target entity
+                        if the team relationship is hostile, doing damage to it.
+                      </p>
+                    </jse-docfn>
+                    <!-- Impact -->
+                    <jse-docfn>
+                      <b>impact</b>
+                      <b>instance.impact(target)</b>
+                      <table>
+                        <thead>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Desc</th>
+                        </thead>
+                        <tr>
+                          <td><code>target</code></td>
+                          <td>:<code>game.entity</code></td>
+                          <td>Target entity to cause damage to</td>
+                        </tr>
+                      </table>
+                      <b>none</b>
+                      <p>
+                        Impacts the target (without a collision check), causing damage
+                        and deleting this bullet.
+                      </p>
+                    </jse-docfn>
+                  </details>
+                  <!-- Subclasses -->
+                  <details>
+                    <summary>Subclasses</summary>
+                    <p>
+                      All of these are part of <code>game.entity</code> directly,
+                      they are not contained in <code>game.entity.bullet</code>.
+                      However, they are registered in <code>game.entity.bullet.variants</code>.
+                    </p>
+                    <ul>
+                      <li>
+                        <code>game.entity.exploding_bullet</code> : Parent type for bullets which explode on impact, such as rockets.
+                        <ul>
+                          <li><code>instance.radius</code> : <code>number</code> : Radius passed to the explosion on impact.</li>
+                          <li><code>instance.explosionAttack</code> : <code>number</code> : Damage done on direct contact (does not include subsequent explosion).</li>
+                          <li><code>instance.overrideConstructor</code> : <code>constructor(team: string, x: number, y: number, radius: number): game.entity.explosion</code> : The constructor function of a class extending <code>game.entity.explosion</code>. If null, uses default <code>new game.entity.explosion()</code></li>
+                        </ul>
+                      </li>
+                      <li>
+                        <code>game.entity.rocket</code> : Impact-triggered explosive projectile which accelerates after being launched.
+                        <ul>
+                          <li><code>game.entity.rocket.default_launch_velocity</code> : <code>[x: number, y: number]</code> : Initial launch velocity vector (in pixels/s) relative to screen. By default, this is <code>[0, 500]</code>, which causes the rockets to "drop" downwards on initial launch.</li>
+                          <li><code>game.entity.rocket.default_drag</code> : <code>number</code> : value: <code>200</code> : Rate at which the rocket slows down after being launched. Counters acceleration.</li>
+                          <li><code>game.entity.rocket.default_acceleration</code> : <code>number</code> : value: <code>2048</code> : Rate of acceleration to full speed, in pixels per second per second.</li>
+                          <li><code>instance.final_speed</code> : <code>number</code> : Maximum speed the rocket will reach, in pixels per second.</li>
+                          <li><code>instance.drag</code> : <code>number</code> : Magnitude of the drag vector which counters the rocket's velocity vector each frame.</li>
+                          <li><code>instance.acceleration</code> : <code>number</code> : Rate at which the rocket accelerates to full speed, in pixels per second per second.</li>
+                        </ul>
+                      </li>
+                      <li>
+                        <code>game.entity.explosion</code> :
+                        Short-lived projectile entity which, by default,
+                        disappears after its animation completes.
+                        Does not disappear on contact with enemies, unlike normal bullets.
+                      </li>
+                      <li>
+                        <code>game.entity.lance</code> :
+                        Extension of <code>game.entity.explosion</code> with a line segment
+                        collider which matches the length of its sprite.
+                      </li>
+                    </ul>
+                  </details>
                 </details>
               </details>
             </details>
@@ -1286,7 +1630,7 @@
             }
           </style>
           <!-- Util -->
-          <details>
+          <details id="docs-util">
             <summary>Utilities</summary>
             <p>Accessed as <code>game.util</code></p>
             <jse-docfn>
@@ -1992,13 +2336,18 @@
             </details>
           </details>
         </hgroup>
+        <hgroup id="docs-exercises">
+          <details>
+            <summary>Level: introductory</summary>
+          </details>
+        </hgroup>
       </div>
       <div id="game" style="width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center;">
         <summary>
           Test your modifications in play
         </summary>
         <div style="width: 900px; height: 600px; position: relative;">
-          <canvas id="game-canvas"></canvas>
+          <canvas id="game-canvas" width="900" height="600"></canvas>
           <div id="game-ui-layer"></div>
         </div>
       </div>
@@ -2008,65 +2357,151 @@
         </summary>
         <div id="editor" style="height: 100%;"></div>
       </div>
-      <div title="Console" style="height: 100%;">
+      <div title="Console" style="height: 100%; display: flex; flex-direction: column;">
         <summary>
           Error log and output for <code>print()</code>
         </summary>
-        <div id="console" style="height: 100%;"></div>
+        <div id="console" style="flex-grow: 1;"></div>
+        <input id="console-input" placeholder="> _" type="text"></input>
       </div>
     </jse-new-tabbed-panel>
-    <div style="display: none; width: 100%; height: 100%;">
-      <!-- <div id="editor-pane" style="flex-grow: 0; margin: 20px 20px 20px 0px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-radius: 0 8px 8px 0; overflow: hidden; transition: ease-out 0.8s;">
-        <div id="editor-toggle" style="text-align: center; color: #272822; text-shadow: 0px 2px rgba(0,0,0,0.3);">⦁</div>
-        <div style="top: 0; bottom: 0; left: 0; right: 0; height: 100%;" id="editor"></div>
-      </div>
-      <div id="editor-pad" style="flex-grow: 1; transition: ease-out 0.8s;"></div>
-      <div class="demo" style="flex-basis: 940px;">
-        <div class="demo-header">
-          Coding Sprouts - Python Shooter
-          <i id="game-reload" class="fa fa-refresh refresh-button" style="float: right;"></i>
-        </div>
-        <div class="demo-content" style="overflow:scroll;">
-          <div id="canvas-wrapper" class="prevent-select">
-            <canvas id="canvas" style="width:900px; height:600px; background-color: black;"></canvas>
-            <div id="ui-layer"></div>
-          </div>
-        </div>
-      </div>
-      <div id="console-pad" style="flex-grow: 1; transition: ease-out 0.8s;"></div>
-      <div id="console-pane" style="flex-grow: 0; margin: 20px 0px 20px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-radius: 8px 0px 0px 8px; overflow: hidden; transition: ease-out 0.8s; position: relative;">
-        <div id="console-toggle"></div>
-        <div style="height: 100%; display: flex; flex-direction: column;">
-          <div style="flex-grow: 1; overflow: hidden;">
-            <div id="console" style="width: 100%; height: 100%;"></div>
-          </div>
-          <input id="console-input" type="text" style="width: 100%;"></input>
-        </div>
-      </div> -->
-    </div>
+    <!-- ========================================== -->
     <scripts id="scripts">
       <script src="./elements.js"></script>
-      <script src="./defaultpy.js"></script>
-      <script src="./victor.min.js"></script>
       <script>
-        var gameData = {libs: []}; // Used to (re)construct the game object
-        var game = {}; // The big one, the main game object
+        var DEBUG = true;
+        // Handler to save which items are opened in the docs tab
+        (() => {
+          let getElementIndex = (node) => {
+            let index = 0;
+            while ((node = node.previousElementSibling)) index++;
+            return index;
+          }
+          /**
+           * Generates an address string for the element
+           * based on the nearest parent with an id.
+           * If the element already has an id attribute, simply returns that.
+           */
+          let getElementAddress = (element) => {
+            if (element.id) return element.id;
+            let match = element;
+            let ids = [];
+            while (true) {
+              match = match.parentNode;
+              if (!match) break;
+              if (match.id) {
+                ids.unshift(match.id);
+                break;
+              } else {
+                ids.unshift(getElementIndex(match));
+              }
+            }
+            return ids.join(":");
+          }
+          
+          let tabs = document.getElementById("tabpanel");
+          let usrstore = window.localStorage;
+          for (let element of tabs.shadowRoot.querySelectorAll("details")) {
+            let address = getElementAddress(element);
+            address = `docsTab.detailState.${address}`;
+            let state = usrstore.getItem(address);
+            if (state == "true") element.open = true;
+            element.addEventListener("click", function(evt) {
+              usrstore.setItem(address, !element.open);
+            });
+          }
+        })();
+        // Handler to save current tab selection
+        (() => {
+          let tabs = document.getElementById("tabpanel");
+          let canvas = tabs.shadowRoot.getElementById("game-canvas");
+          let uilayer = tabs.shadowRoot.getElementById("game-ui-layer");
+          uilayer.addEventListener("pointerover", () => {
+            canvas.classList.add("canvas-hover");
+          });
+          uilayer.addEventListener("pointerout", () => {
+            canvas.classList.remove("canvas-hover");
+          });
+        })();
+      </script>
+      <script src="./defaultpy.js"></script>
+      <script>
+        var SproutCore = {components: []};
+      </script>
+      <!-- Loads the entire main game -->
+      <script src="./SproutLib/core.js"></script>
+      <script>
+        // Every element that needs to be set up on the main page
+        // is done here, not in external script files.
+        var jslib = JSLib2;
         var tabs = document.getElementById("tabpanel");
-        var reloadIcon = jslib.buildElement("i", {
-          id: "game-reload",
-          class: "fa fa-refresh refresh-button",
+
+        // Reload button
+        var reloadIcon = JSLib2.build("i", {
+            id: "game-reload",
+            class: "fa fa-refresh refresh-button",
+            style: {
+              float: "right",
+              padding: "0px 4px",
+              fontSize: "1.17em",
+            }
+          });
+        reloadIcon.spinnerAnimation = reloadIcon.animate([
+          { transform: "rotate(0deg)" },
+          { transform: "rotate(360deg)" }
+        ], {
+          duration: 2000,
+          easing: "linear",
+          iterations: Infinity
+        });
+        reloadIcon.spinnerAnimation.pause();
+        tabs.navbar.append(reloadIcon);
+
+        // Clickable logo
+        var logosticker = JSLib2.buildTree(["span", {
+          class: "logosticker",
           style: {
             float: "right",
-            padding: "0px 1em",
-            fontSize: "1.17em",
+            padding: "0px 4px",
+            height: "1.17em",
           }
+        }, [
+            ["img", {
+              src: "./assets/image/logomark.svg",
+              class: "logostickerlogo",
+              style: {width: "1.17em"}
+            }],
+            ["a", {
+              href: "www.tech-sprouts.com",
+              class: "logostickerlink",
+              textContent: "Tech Sprouts LLC",
+              style: {
+                display: "inline-block",
+                padding: "0px 4px",
+                textDecoration: "none",
+                verticalAlign: "top"
+              }
+            }]
+          ]
+        ]);
+        // Applies closing animation only after first open to prevent flashing on page load.
+        (Array.from(logosticker.getElementsByClassName("logostickerlink"))).forEach(element => {
+          let evtfn;
+          evtfn = function(evt) {
+            evt.target.removeEventListener("pointerleave", evtfn);
+            evt.target.classList.add("logostickerlink-closeable");
+          }
+          element.addEventListener("pointerleave", evtfn);
         });
-        tabs.navbar.append(reloadIcon);
-        var unsavedIcon = jslib.buildElement("span", {
+        tabs.navbar.append(logosticker);
+
+        // Unsaved icon
+        var unsavedIcon = JSLib2.build("span", {
           id: "unsaved",
           textContent: "unsaved"
         });
         tabs.navbar.append(unsavedIcon);
+
         // Construct editor
         var editor = ace.edit(
           tabs.shadowRoot.getElementById("editor"), {
@@ -2075,6 +2510,28 @@
           autoScrollEditorIntoView: true
         });
         editor.renderer.attachToShadowRoot();
+        // Editor autosave system
+        // Todo: add swapping save states with error detection
+        let editorTimeStamp = Date.now();
+        let editorDirty = false;
+        let editorSaveLoop = (async () => {
+          while (true) {
+            if (editorDirty && Date.now() > (editorTimeStamp + 1000)) {
+              window.localStorage.setItem("./main.py", editor.getValue());
+              editorDirty = false;
+              editorTimeStamp = Date.now();
+            }
+            await new Promise(r => setTimeout(r, 1000));
+          }
+        })();
+        editor.addEventListener("change", (delta) => {
+          editorDirty = true;
+          editorTimeStamp = Date.now();
+        });
+        
+        // ==========================================
+        // Custom console setup
+
         // Construct console
         var consoleMain = ace.edit(
           tabs.shadowRoot.getElementById("console"), {
@@ -2084,53 +2541,124 @@
           autoScrollEditorIntoView: true
         });
         consoleMain.renderer.attachToShadowRoot();
-      </script>
-      <script src="./util.js"></script>
-      <script src="./uilib.js"></script>
-      <script src="./entity.js"></script>
-      <script src="./gamecore.js"></script>
-      <script src="./main.js"></script>
-      <script>
-        // customElements.define(
-        //   "jse-docfn",
-        //   class Why extends HTMLElement {
-        //     constructor() {
-        //       super();
-        //     }
-        //     static findElementByNameCondition(name, element) {
-        //       return element.name == name ? element : null;
-        //     }
-        //     /**
-        //      * @return {HTMLElement}
-        //      */
-        //     findElementByCondition(state, element = null, condition = null) {
-        //       element ??= this;
-        //       condition ??= Why.findElementByNameCondition;
-        //       let ret, v;
-        //       for (let i = 0; i < element.children.length; i++) {
-        //         v = element.children[i];
-        //         if (condition(state, v)) return v;
-        //         ret = this.findElementByCondition(state, v, condition);
-        //         if (ret) return ret;
-        //       }
-        //     }
-        //     static slotLinks = [
-        //       "name", "def", "params", "returns", "desc"
-        //     ];
-        //     connectedCallback() {
-        //       let slots = this.__proto__.constructor.slotLinks;
-        //       let cache = [];
-        //       for (let i = 0; i < slots.length; i++) {
-        //         cache.push(this.children[i]);
-        //       }
-        //       this.replaceChildren();
-        //       this.appendChild(document.getElementById("doc-fn").content.cloneNode(true));
-        //       for (let i = 0; i < slots.length; i++) {
-        //         if (cache[i]) this.findElementByCondition(slots[i]).replaceWith(cache[i]);
-        //       }
-        //     }
-        //   }
-        // );
+        
+        // Used to prevent message spam
+        let printHistory = [];
+
+        // Custom print function provided to Pyodide
+        function print(...items) {
+          let timeStamp = `${(new Date()).toLocaleTimeString()}`;
+          let item;
+          for (let i = 0; i < items.length; i++) {
+            let item = items[i];
+            if (!JSLib2.isString(item)) {
+              items[i] = JSON.stringify(item);
+            }
+          }
+          let str = `[${timeStamp}]: ${items.join(' ')}${items.last[items.last.length-1] == '\n' ? '' : '\n'}`;
+          if (!printHistory.includes(str)) {
+            printHistory.unshift(str);
+            // Todo: add setting for print history collapse
+            // Todo: add indicator for messages sent multiple times
+            if (printHistory.length > 5) {
+              printHistory.pop();
+            }
+            
+            consoleMain.session.insert({
+              // Initial cursor coordinates
+              row: consoleMain.session.getLength(),
+              column: 0
+            }, str);
+            consoleMain.scrollToLine(consoleMain.session.getLength());
+          }
+        }
+
+        // Handler for Pyodide errors
+        function printError(item) {
+          let msg = item.message;
+          if (item instanceof pyodide._api.PythonError) {
+            // Error is already formatted (poorly), line number
+            // comes after the second instance of "File"
+            // Everything before is useless and will only confuse
+            // the users.
+            let i = e.message.indexOf("File");
+            i += "File".length;
+            i = e.message.indexOf("File", i);
+            if (i > 0 && i < e.message.length) msg = e.message.slice(i);
+          }
+          msg = `[${timeStamp}] Err: ${msg}${msg[msg.length-1] == '\n' ? '' : '\n'}`;
+          // Browser console is allowed to suffer all errors,
+          // since it often has its own spam handling.
+          console.error(msg);
+          
+          if (!printHistory.includes(msg)) {
+            printHistory.unshift(msg);
+            // Todo: add setting for print history collapse
+            // Todo: add indicator for messages sent multiple times
+            if (printHistory.length > 5) {
+              printHistory.pop();
+            }
+            consoleMain.session.insert({
+              row: consoleMain.session.getLength(),
+              column: 0
+            }, msg);
+          }
+          return msg;
+        }
+
+        // ==========================================
+        // Fully initialize game
+        async function loadGame() {
+          await SproutCore.load(
+            tabs.shadowRoot.getElementById("game-canvas"),
+            tabs.shadowRoot.getElementById("game-ui-layer")
+          ).then(async () => {
+            var pyodide = await loadPyodide();
+            pyodide.setStderr({ batched: printError });
+            pyodide.setStdout({ batched: print });
+            SproutCore.game.py = pyodide;
+            // Load python code
+            let pyText = editor.getValue();
+            if (pyText != "") {
+              // Avoids outdated save when reloading quickly from the editor
+              pyodide.FS.writeFile("/home/pyodide/main.py", pyText);
+            } else {
+              pyText = window.localStorage.getItem("./main.py");
+              if (pyText) {
+                pyodide.FS.writeFile("/home/pyodide/main.py", pyText);
+                editor.setValue(pyText);
+              } else {
+                pyodide.FS.writeFile("/home/pyodide/main.py", defaultpy);
+                editor.setValue(defaultpy);
+              }
+            }
+            pyodide.registerJsModule("game", SproutCore.game);
+            SproutCore.usrgame = pyodide.pyimport("main");
+            SproutCore.run();
+          });
+        }
+        async function reload() {
+          await SproutCore.unload();
+          await loadGame();
+        }
+        // Finish reload icon
+        // Must be done here due to game interactions
+        reloadIcon.addEventListener("pointerdown", async () => {
+          reloadIcon.spinnerAnimation.play();
+        });
+        reloadIcon.addEventListener("pointerup", async () => {
+          try {
+            await reload();
+          } catch (e) {
+            console.error(e);
+          }
+          reloadIcon.spinnerAnimation.pause();
+        });
+        reloadIcon.addEventListener("pointerout", () => {
+          reloadIcon.spinnerAnimation.pause();
+        });
+        // All set, let's go
+        loadGame();
       </script>
     </scripts>
   </body>

@@ -1,3 +1,10 @@
+// (() => {
+//   // Load fix.js, an integral component of JSLib
+//   let fix = document.createElement("script");
+//   fix.src = "./JSLib/fix.js";
+//   document.body.append(fix);
+// })();
+
 class JSLib2 {
   // Useful constants
   static svgns = "http://www.w3.org/2000/svg";
@@ -6,7 +13,7 @@ class JSLib2 {
   /**
    * Returns the supplied parameter if it is a string. Otherwise, null.
    * @param {*} v 
-   * @returns {string|null)
+   * @returns {string|null}
    */
   static isString(v) {
     return (typeof v === 'string' || v instanceof String) ? v : null;
@@ -61,9 +68,9 @@ class JSLib2 {
         case "style":
           JSLib2.style(obj, v);
           break;
-        case "innerHTML":
-        case "textContent":
-          obj[k] = data[v];
+        case "innerhtml":
+        case "textcontent":
+          obj[k] = v;
           break;
         case "class": // Included to indicate that it doesn't work otherwise
         default:
@@ -98,14 +105,30 @@ class JSLib2 {
   }
   /**
    * A complex, but powerful recursive system for building an entire element tree at once.\
-   * Basic usage is as follows: `buildTree(["tag", {elementProperty: "value", style: {}}, ...childTags]);`\
-   * 
-   * @param {Array} data 
-   * @param {HTMLElement?} parent 
-   * @param {*} reference 
+   * Basic usage is as follows:\
+   * `buildTree(["tag", {elementProperty: "value", style: {}}, ...childTags]);`\
+   * A more complete example:\
+   * ```
+   * let result = buildTree(["div", {
+   *     class: "exclass",
+   *     style: {
+   *       backgroundColor: "red"
+   *     }
+   *   }, [
+   *     ["div", {
+   *       class: "childclass"
+   *     }],
+   *     ["div", {
+   *       class: "childclass"
+   *     }]
+   *   ]
+   * ]);
+   * ```
+   * @param {Array} data Array containing the element tree to be built
+   * @param {HTMLElement?} parent If supplied, the result is appended to this.
    * @returns {HTMLElement|Array<HTMLElement>}
    */
-  static buildTree(data, parent, reference) {
+  static buildTree(data, parent) {
     if (!data) return;
     // Build simple text node when passed a string
     if (JSLib2.isVString(data)) {
@@ -122,18 +145,18 @@ class JSLib2 {
     if (!JSLib2.isString(data[0])) {
       let ret = [];
       for (let element of data)
-        ret.push(JSLib2.buildTree(element, parent, reference));
+        ret.push(JSLib2.buildTree(element, parent));
       return ret;
     }
     // Main construction case
     let element;
     let start = 1;
-    if (!(data[1] instanceof Node))
+    if (!(data[start] instanceof Node))
       element = JSLib2.build(data[0], data[start++]);
     else
       element = document.createElement(data[0]);
     for (let i = start; i < data.length; i++) {
-      this.buildTree(data[i], element, reference);
+      this.buildTree(data[i], element);
     }
     if (parent) parent.appendChild(element);
     return element;
@@ -145,7 +168,7 @@ class JSLib2 {
    * @param {HTMLElement} data A table of element properties to be assigned
    * @returns {HTMLElement}
    */
-  async awaitBuild(tag, data) {
+  static async awaitBuild(tag, data) {
     // Link promise finalizers
     let ready, fail;
     let promise = new Promise((resolve, reject) => {ready = resolve; fail = reject;});
@@ -156,6 +179,33 @@ class JSLib2 {
     // Return
     await promise;
     return element;
+  }
+
+  /**
+   * Accesses a static property of the provided instance's class.
+   * Climbs the inheritance chain until it is found, allowing static inheritance as it should have been.
+   * @param {*} instance 
+   * @param {string} property 
+   * @returns {*} The value of the nearest static property of the matching name
+   */
+  static getStatic(instance, property) {
+    let proto = Object.getPrototypeOf(instance);
+    while (proto?.constructor && !Object.hasOwn(proto.constructor, property)) {
+      proto = Object.getPrototypeOf(proto);
+    }
+    return proto?.constructor?.[property];
+  }
+
+  /**
+   * Provides access to static properties as if they were defaults
+   * for instance values.
+   * @param {*} instance 
+   * @param {string} property 
+   * @returns {*}
+   */
+  static getStaticDefault(instance, property) {
+    if (Object.hasOwn(instance, property)) return instance["property"];
+    else return this.getStatic(instance, property);
   }
 }
 

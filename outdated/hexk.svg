@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="76.1 0 207 360" width="207px" height="360px">
+  <defs>
+    <filter id="filter-0" primitiveUnits="userSpaceOnUse" x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox">
+      <title>Inner Drop Shadow</title>
+      <feFlood result="flood-0" style=""/>
+      <feMorphology result="morphology-0" in="SourceGraphic" radius="8"/>
+      <feComposite result="composite-0" in="flood-0" in2="morphology-0" operator="out"/>
+      <feGaussianBlur result="gaussian-blur-0" in="composite-0" stdDeviation="14"/>
+      <feOffset result="offset-0" in="gaussian-blur-0" dy="16"/>
+      <feComposite result="composite-1" in="offset-0" in2="morphology-0" operator="in"/>
+      <feBlend result="blend-0" in="composite-1" in2="morphology-0"/>
+      <feFlood result="flood-1" style="flood-color: rgb(102, 102, 102);"/>
+      <feMorphology result="morphology-1" in="SourceGraphic" radius="4" operator="dilate"/>
+      <feComposite result="composite-2" in="flood-1" in2="morphology-1" operator="in"/>
+      <feBlend result="blend-1" in="blend-0" in2="composite-2"/>
+    </filter>
+    <mask id="mask-0">
+      <rect x="76" width="208" height="360" style="fill: rgb(255, 255, 255);"/>
+    </mask>
+  </defs>
+  <g style="mask: url(&quot;#mask-0&quot;);">
+    <path d="M 283.923 240 L 387.846 300 L 387.846 420 L 283.923 480 L 180 420 L 180 300 Z" style="filter: url(&quot;#filter-0&quot;); transform-origin: 20px 382.222px 0px; paint-order: fill markers; fill: rgb(77, 77, 77); stroke-width: 0px;" id="n-gon-3"/>
+    <path d="M 76.077 240 L 180 300 L 180 420 L 76.077 480 L -27.846 420 L -27.846 300 Z" style="filter: url(&quot;#filter-0&quot;); transform-origin: -187.846px 382.222px 0px; paint-order: fill markers; fill: rgb(77, 77, 77); stroke-width: 0px;" id="n-gon-4"/>
+    <path d="M 180 60 L 283.923 120 L 283.923 240 L 180 300 L 76.077 240 L 76.077 120 Z" style="filter: url(&quot;#filter-0&quot;); paint-order: fill markers; fill: rgb(77, 77, 77); stroke-width: 0px;" id="object-0"/>
+    <path d="M 283.923 -120 L 387.846 -60 L 387.846 60 L 283.923 120 L 180 60 L 180 -60 Z" style="filter: url(&quot;#filter-0&quot;); transform-origin: 20px 22.222px 0px; paint-order: fill markers; fill: rgb(77, 77, 77); stroke-width: 0px;" id="n-gon-1"/>
+    <path d="M 76.077 -120 L 180 -60 L 180 60 L 76.077 120 L -27.846 60 L -27.846 -60 Z" style="filter: url(&quot;#filter-0&quot;); transform-origin: -187.846px 22.222px 0px; paint-order: fill markers; fill: rgb(77, 77, 77); stroke-width: 0px;" id="n-gon-2"/>
+  </g>
+</svg>
