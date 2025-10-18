@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>SproutCore Engine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.37.1/ace.js"
+      integrity="sha512-qLBIClcHlfxpnqKe1lEJQGuilUZMD+Emm/OVMPgAmU2+o3+R5W7Tq2Ov28AZqWqZL8Jjf0pJHQZbxK9B9xMusA=="
+      crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ace-builds@1.37.5/css/ace.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+      integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+      crossorigin="anonymous" defer>
+    </script>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- <canvas id="gl-canvas" width="640" height="480"></canvas>
+    <script type="module">
+    </script> -->
+
+    <!-- Tabs -->
+    <div id="navbar" class="navbar">
+      <a id="tabhead-docs" class="tabhead" href="#tab=docs">Documentation</a>
+      <a id="tabhead-game" class="tabhead" href="#tab=game">Game</a>
+      <a id="tabhead-code" class="tabhead" href="#tab=code">Code</a>
+      <a id="tabhead-cons" class="tabhead" href="#tab=cons">Console</a>
+    </div>
+
+    <!-- Content -->
+    <div class="window">
+      <!-- Documentation -->
+      <div class="tabcontent" id="tab-docs"></div>
+
+      <!-- Game -->
+      <div class="tabcontent centercontainer" id="tab-game"></div>
+
+      <!-- Code -->
+      <div class="tabcontent" id="tab-code"></div>
+
+      <!-- Console -->
+      <div class="tabcontent" id="tab-cons"></div>
+    </div>
+
+    <script type="module">
+      import doctab from "./Tabs/docs.js";
+      doctab();
+      import gametab from "./Tabs/game.js";
+      gametab();
+      import codetab from "./Tabs/code.js";
+      let editor = codetab();
+      import constab from "./Tabs/console.js";
+      let customConsole = constab();
+      import SproutCore from "./SproutCore/core.js";
+      document.SproutCore = SproutCore;
+      SproutCore.init(customConsole);
+      let reloadIcon = document.getElementById("game-reload");
+      reloadIcon.addEventListener("pointerup", async () => {
+        try {
+          await SproutCore.init(customConsole);
+        } catch (e) {
+          console.error(e);
+        }
+        reloadIcon.spinnerAnimation.pause();
+      });
+    </script>
+    <script type="module">
+      import TabManager from "./Tabs/mgr.js";
+      import JSLib from "./SproutCore/jslib.js";
+      // Tabs
+      (() => {
+        // Stores and switches location (tab & docs)
+        // Todo: use to store docs section
+        let tabs = new TabManager("docs", "game", "code", "cons");
+        let hashChange = () => {
+          let hash = window.location.hash.substring(1);
+          let success = tabs.hashChange(hash);
+          if (!success && window.location.hash !== "#tab=docs") {
+            window.location.hash = "#tab=docs";
+          }
+        }
+        window.addEventListener("hashchange", hashChange);
+        window.addEventListener("load", hashChange);
+      })();
+    </script>
+
+    <div id="assets" style="display: none;">
+    </div>
+  </body>
+</html>

@@ -1,0 +1,235 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100vh;
+  width: 100vw;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #07150D;
+  color: whitesmoke;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.prevent-select {
+  /* Safari */
+  -webkit-user-select: none;
+  /* IE 10 and IE 11 */
+  -ms-user-select: none;
+  /* Standard syntax */
+  user-select: none;
+}
+
+.button {
+  background-color: #122D1E;
+  color: white;
+  font-weight: bold;
+  padding: 6px 18px;
+  border-radius: 5px;
+  font-size: 17px;
+  border: none;
+  vertical-align: middle;
+  text-align: center;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.button:hover {
+  background-color: #1C4D3D;
+}
+
+.button:active {
+  padding: 8px 18px 4px 18px;
+  background-color: #122D1E;
+  color: lightslategrey;
+  box-shadow: 0 2px #07150D inset;
+}
+
+.navbar {
+  background-color: #122;
+  padding: 8px 4px 4px 4px;
+  box-shadow: 0 -8px 8px -4px black inset;
+  .tabhead {
+    border-radius: 5px 5px 0 0;
+    background-color: #233;
+    padding: 4px 2ch 4px 2ch;
+    &.active {
+      background-color: darkslategray;
+    }
+  }
+}
+
+
+.window {
+  background-color: darkslategray;
+  width: 100%;
+  flex-grow: 1;
+  overflow-y: scroll;
+}
+
+.tabcontent {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.centercontainer {
+  display: grid;
+  place-items: center;
+}
+
+.hidden {
+  display: none !important;
+}
+
+
+#tab-cons {
+  display: flex;
+  flex-direction: column;
+  background-color: #272822;
+}
+#console-container {
+  display: block;
+  overflow: scroll;
+  flex-grow: 1;
+}
+#console {
+  width: 100%;
+  color: white;
+  border-collapse: collapse;
+  font-size: 10pt;
+  font-family: 'Courier New', Courier, monospace;
+  text-wrap: stable;
+  display: table;
+}
+
+.console-entry {
+  text-wrap: inherit;
+  padding: 2px;
+}
+.console-entry:hover {
+  background-color: #49483E;
+}
+.console-row-number {
+  text-wrap: nowrap;
+  padding: 2px;
+  width: 2rem;
+  background-color: #2F3129;
+  color: #FFFFFFA0;
+  text-align: right;
+  border-right: 1px solid #787A6F;
+}
+.console-date {
+  text-wrap: nowrap;
+  padding: 2px;
+  width: 0;
+  color: #FFFFFFA0;
+  padding-left: 6px;
+}
+.console-text {
+  text-wrap: nowrap;
+  padding: 2px;
+}
+.console-repeat-counter {
+  text-wrap: nowrap;
+  padding: 2px;
+  width: 0;
+  border-left: 1px solid #2F3129;
+}
+
+/* Docs */
+
+code {
+  background-color: #272822;
+  padding: 4px 1ch;
+  border-radius: 5px;
+  transition: all .5s;
+}
+
+code:hover {
+  scale: 1.01;
+  box-shadow: 0px 4px 8px inset #00000050;
+}
+
+.codeblock {
+  display: block;
+  margin: 2px;
+}
+
+li {
+  padding-top: 1ch;
+  padding-bottom: 1ch;
+}
+
+details {
+  margin: 8px;
+  border-radius: 5px;
+  background-color: #07150D20;
+  box-shadow: 0px 4px 4px #07150D;
+  padding: 4px;
+  transition: all .5s;
+}
+
+details:hover {
+  /* background-color: #07150D40; */
+  box-shadow: 0px 8px 8px #07150DA0;
+}
+
+/* Indents contents in each nested block */
+details>:not(summary, details, jse-docfn) {
+  padding-left: 2ch;
+}
+
+details>*+ul,
+details>*+ol {
+  margin-left: 4ch;
+}
+
+details>summary {
+  font-size: 1.5em;
+  font-weight: bold;
+  /* Safari */
+  -webkit-user-select: none;
+  /* IE 10 and IE 11 */
+  -ms-user-select: none;
+  /* Standard syntax */
+  user-select: none;
+}
+
+details>details>summary {
+  font-size: 1.33em;
+}
+
+details>details>details summary {
+  font-size: 1.17em;
+}
+
+::selection {
+  border-radius: 4px;
+  background-color: #67a38f7e;
+  text-shadow: 0px 0px 2px #07150D;
+}
+
+/* Used for deprecated or unsupported methods */
+.disabled {
+  color: #757770;
+}
+
+*:link {
+  color: white;
+  text-shadow: 0 0 4px white;
+}
+
+*:visited {
+  color: white;
+}
