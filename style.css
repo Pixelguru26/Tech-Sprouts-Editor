@@ -152,6 +152,7 @@ body {
 code {
   background-color: #272822;
   padding: 4px 1ch;
+  line-height: 2;
   border-radius: 5px;
   transition: all .5s;
 }

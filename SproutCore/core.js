@@ -129,7 +129,7 @@ const SproutCoreClass = class SproutCore {
     this.py.FS.writeFile(
       "/home/pyodide/main.py",
       "from sproutcore import game\n" +
-      window.localStorage.getItem("./main.py") ?? ""
+      (window.localStorage.getItem("./main.py") ?? "")
     );
     try {
       // if (restart) {

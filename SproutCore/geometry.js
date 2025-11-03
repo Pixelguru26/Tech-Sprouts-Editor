@@ -527,7 +527,7 @@ export class Shape {
     return Geo.intersect(this, other);
   }
 }
-Geo.Shape = Shape;
+Geo.shape = Shape;
 
 export class Rectangle extends Shape {
   static name = "rec";
@@ -597,12 +597,12 @@ export class Rectangle extends Shape {
   /**
    * @type {number} Width or height, whichever is greater.
    */
-  get min() { return Math.max(this.w, this.h); }
+  get max() { return Math.max(this.w, this.h); }
   /**
    * @type {number} Determines which dimension (width or height)
    * is greater, then replaces it with the supplied value.
    */
-  set min(v) {
+  set max(v) {
     if (this.h > this.w)
       this.h = v;
     else
@@ -618,6 +618,64 @@ export class Rectangle extends Shape {
   intersectAABB(other) {
     return Geo.intersectAABB(this.x, this.y, this.w, this.h, other.x, other.y, other.w, other.h);
   }
+
+  /**
+   * Returns the shortest distance vector for this rectangle
+   * to escape intersection with the other.
+   * Be sure to perform an intersection test first,
+   * otherwise this will work improperly.
+   * @param {Rectangle} other 
+   * @returns {[number, number]}
+   */
+  expulsion(other) {
+    let distL = this.r - other.x;
+    let distR = (other.x + other.w) - this.x;
+    let distU = this.d - other.y;
+    let distD = (other.y + other.h) - this.y;
+    let minDist = distL;
+    let dir = 0;
+    if (Math.abs(distR) < Math.abs(minDist)) {
+      dir = 1;
+      minDist = distR;
+    }
+    if (Math.abs(distU) < Math.abs(minDist)) {
+      dir = 2;
+      minDist = distU;
+    }
+    if (Math.abs(distD) < Math.abs(minDist)) {
+      dir = 3;
+      minDist = distD;
+    }
+    switch (dir) {
+      case 0: // Left
+        return [-distL, 0];
+      case 1: // Right
+        return [distR, 0];
+      case 2: // Up
+        return [0, -distU];
+      case 3: // Down
+        return [0, distD];
+      default: // Stops linter complaints
+        return [0, 0];
+    }
+  }
+
+  /**
+   * Moves this rectangle out of the other rectangle if they intersect.
+   * Returns the expulsion vector, which may then be used as a normal.
+   * @param {Rectangle} other 
+   */
+  expelFrom(other) {
+    if (this.intersectAABB(other)) {
+      let [dx, dy] = this.expulsion(other);
+      this.x += dx;
+      this.y += dy;
+      return [dx, dy];
+    }
+    return [0, 0];
+  }
+
+  
 
   /**
    * Returns the intersection area of two rectangle objects
@@ -682,7 +740,7 @@ export class Rectangle extends Shape {
   }
 
   /**
-   * @todo: The hell was I thinking? This doesn't do anything
+   * @todo: rewrite this entire thing to actually work
    * Clips a line segment to only the portion that fits within
    * the bounds of this rectangle.
    * @param {Geo.LineSeg} lineSeg
