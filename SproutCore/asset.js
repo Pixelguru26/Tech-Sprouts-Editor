@@ -91,8 +91,8 @@ class Asset {
    * @returns {Asset}
    */
   static push(asset) {
-    if (!Asset.que.includes(v)) Asset.que.push(v);
-    return v;
+    if (!Asset.que.includes(asset)) Asset.que.push(asset);
+    return asset;
   }
   /**
    * Removes and returns the oldest asset from the queue

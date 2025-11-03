@@ -11,7 +11,7 @@ function uid(id) {
 
 export function subsection(header, ...children) {
   let ret = JSLib.buildElement("details", {
-    open: "true"
+    // open: "true"
   });
   if (JSLib.isString(header)) {
     ret.appendChild(JSLib.buildElement("summary", {

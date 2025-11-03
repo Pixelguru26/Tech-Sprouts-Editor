@@ -221,7 +221,7 @@ class TimerUtil(AutoUpdateUtil):
       this.sustain_mode = True
     this.internal_sustained = True
     return ret
-Util.autoupdate.timer = TimerUtil   
+Util.autoupdate.timer = TimerUtil
 
 class RandTimerUtil(TimerUtil):
   def __init__(this, fn, intervalMin = 0, intervalMax = 1, attach=True):
@@ -557,7 +557,8 @@ class LivingEntity(Entity):
 Entity.livingEntity = LivingEntity
 
 class PlayerWeapon():
-  def __init__(this, ammo = 10, rate = 10, auto = False, offsets = [[-10, 0, 0], [10, 0, 0]], bullet = BulletEntity, owner = None):
+  def __init__(this, power = 34, ammo = 10, rate = 10, auto = False, offsets = [[-10, 0, 0], [10, 0, 0]], bullet = BulletEntity, owner = None):
+    this.power = 34
     this.ammo = ammo
     this.offsets = offsets
     this.barrel = 0
@@ -605,6 +606,7 @@ class PlayerWeapon():
     if this.attemptUseAmmo():
       offset = this.cycleBarrel()
       bullet = this.owner.shoot(this.bullet, offset[0], offset[1], offset[2])
+      bullet.attack = this.power
       if lag > 0:
         # Lag compensation
         bullet.update(lag)
@@ -635,12 +637,24 @@ class PlayerEntity(LivingEntity):
     this.persistent = True
     this.score = 0
     this.weapons = []
+    this.clamp = True
     this.addWeapon(" ", PlayerWeapon(
-      1000, 10, True, [[-16, 0, 0], [16, 0, 0]], BulletEntity
+      34, 1000, 10, True, [[-16, 0, 0], [16, 0, 0]], BulletEntity
     ))
     this.addWeapon("Shift", PlayerWeapon(
-      20, 1, False, [[-24, -6, 0], [24, -6, 0]], BulletEntity
+      34, 20, 1, False, [[-24, -6, 0], [24, -6, 0]], BulletEntity
     ))
+  def __nop__(this): pass
+  def __get_pwep__(this):
+    return this.weapons[0]
+  def __set_pwep__(this, v):
+    this.weapons[0] = v
+  def __get_swep__(this):
+    return this.weapons[1]
+  def __set_swep__(this, v):
+    this.weapons[1] = v
+  primaryWeapon = property(__get_pwep__, __set_pwep__, __nop__)
+  secondaryWeapon = property(__get_swep__, __set_swep__, __nop__)
   def reset(this):
     this.alive = True
     this.health = 100
@@ -663,7 +677,11 @@ class PlayerEntity(LivingEntity):
       this.turnLeft(360 * dt)
     if (game.keyState("e")):
       this.turnRight(360 * dt)
-    # Todo: restrict to screen bounds
+    if this.clamp:
+      if (this.x < 0): this.x = 0
+      if (this.x > 900): this.x = 900
+      if (this.y < 0): this.y = 0
+      if (this.y > 600): this.y = 600
     for wep in this.weapons:
       if game.keyState(wep.key):
         wep.sustain()
@@ -714,6 +732,11 @@ class BasicEnemyEntity(LivingEntity):
   def impact(this, other):
     other.damage(this.attack)
     this.delete("impact")
+  def delete(this, reason=None):
+    if reason == "health":
+      if game.player != None:
+        game.player.score += 10
+    return super().delete(reason)
 
 Entity.basicEnemyEntity = BasicEnemyEntity
 
