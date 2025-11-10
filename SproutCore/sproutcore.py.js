@@ -87,8 +87,8 @@ class SmoothUtil(AutoUpdateUtil):
   """
   An abstraction for a number that approaches a target value
   over time at a constant speed.\n
-  \`val\` is the target at any given time.\n
-  \`smoothed\` is the output value.
+  val is the target at any given time.\n
+  smoothed is the output value.
   """
   def __init__(this, val, min, max, time = 1, attach=True):
     super().__init__(attach)
@@ -125,10 +125,10 @@ class VerletUtil(AutoUpdateUtil):
   """
   An attempt to abstract away physics integration properly.\n
   Handles integration of one independent axis entirely.\n
-  To apply force on this axis, set the instance \`accel\` value
+  To apply force on this axis, set the instance accel value
   to the appropriate acceleration. In the next update step,
-  \`this.accel\` will be applied.\n
-  Additionally, \`this.vel\` exposes the velocity of this
+  this.accel will be applied.\n
+  Additionally, this.vel exposes the velocity of this
   value, which can be set to apply a velocity instantaneously
   (equivalent to infinite acceleration) or read as a
   simulation output.
@@ -270,7 +270,7 @@ class Entity:
     this.ax = 0
     this.ay = 0
     this.body = game.geo.Circle.new(0, 0, 0)
-    this.sprite = game.asset.ImageAsset.getImage("error")
+    this.sprite = game.asset.ImageAsset.getImage("error.png")
     this.drawdebug = False
     this.__proxy = None
   def __nop__(this): pass
@@ -540,7 +540,7 @@ class BulletEntity(Entity):
     this.body.ay = this.body.by
     this.body.bx += cos(rad) * distance
     this.body.by += sin(rad) * distance
-Entity.bulletEntity = BulletEntity
+Entity.bulletEntity = BulletEntity # type: ignore
 
 class LivingEntity(Entity):
   def __init__(this):
@@ -554,7 +554,7 @@ class LivingEntity(Entity):
     if this.health < 0:
       this.health = 0
       this.delete("health")
-Entity.livingEntity = LivingEntity
+Entity.livingEntity = LivingEntity # type: ignore
 
 class PlayerWeapon():
   def __init__(this, power = 34, ammo = 10, rate = 10, auto = False, offsets = [[-10, 0, 0], [10, 0, 0]], bullet = BulletEntity, owner = None):
@@ -625,7 +625,8 @@ class PlayerEntity(LivingEntity):
     super().__init__()
     this.lifetime = -1
     this.team = "player"
-    this.sprite = game.asset.ImageAsset.getImage("player/player_base.png")
+    # this.sprite = game.asset.ImageAsset.getImage("player/player_base.png") # pyright: ignore[reportOptionalMemberAccess]
+    this.sprite = game.asset.getAsset("splode") # pyright: ignore[reportOptionalMemberAccess]
     this.collisionType = "circle"
     this.speed = 450
     this.body.r = 50

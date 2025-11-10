@@ -65,17 +65,17 @@ let Entity = class Entity {
           // Should scale to fit in bounding circle
           let sm = Math.max(img.width, img.height);
           let scale = (body.r * 2) / sm;
-          g.drawCentered(img, cx, cy, sx * scale, sy * scale, a, cx, cy);
+          g.drawCentered(img, cx, cy, sx * scale, sy * scale, a, cx, cy, entity["age"]);
         } else {
-          g.drawCentered(img, cx, cy, sx, sy, a, cx, cy);
+          g.drawCentered(img, cx, cy, sx, sy, a, cx, cy, entity["age"]);
         }
         if (entity["drawdebug"]) g.debugCircle(cx, cy, body.r);
         break;
       case "rec":
         if (entity["autoscale"]) {
-          g.drawRect(img, x, y, w, h, a, cx, cy);
+          g.drawRect(img, x, y, w, h, a, cx, cy, entity["age"]);
         } else {
-          g.draw(img, x, y, sx, sy, a, cx, cy);
+          g.draw(img, x, y, sx, sy, a, cx, cy, entity["age"]);
         }
         if (entity["drawdebug"]) g.debugRect(x, y, w, h);
         break;
@@ -84,13 +84,13 @@ let Entity = class Entity {
           let l = body.length;
           a = body.angle;
           let scale = l / img.width;
-          g.drawCentered(img, cx, cy, scale * sx, scale * sy, a, cx, cy);
+          g.drawCentered(img, cx, cy, scale * sx, scale * sy, a, cx, cy, entity["age"]);
         } else {
           x = body.ax
           y = body.ay
           cx = body.bx
           cy = body.by
-          g.drawCentered(img, cx, cy, sx, sy, a, cx, cy);
+          g.drawCentered(img, cx, cy, sx, sy, a, cx, cy, entity["age"]);
         }
         if (entity["drawdebug"]) g.debugLine(body.ax, body.ay, body.bx, body.by);
         break;

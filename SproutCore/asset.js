@@ -1,3 +1,5 @@
+import Util from "./util.js";
+import {Rectangle} from "./geometry.js";
 
 
 class Asset {
@@ -102,7 +104,6 @@ class Asset {
     if (Asset.que.length > 0) return Asset.que.shift();
   }
 }
-
 Asset.ImageAsset = class ImageAsset extends Asset {
   /**
    * @param {string} path 
@@ -126,37 +127,118 @@ Asset.ImageAsset = class ImageAsset extends Asset {
 
   get width() { return this.element.naturalWidth; }
   get height() { return this.element.naturalHeight; }
+
+  /**
+   * 
+   * @param {CanvasRenderingContext2D} canvas 
+   * @param {number} [clock=0] 
+   */
+  draw(canvas, clock = 0) {
+    canvas.drawImage(this.element, 0, 0);
+  }
 }
 
+/**
+ * Class outline used to provide hints in IDEs
+ */
+class SliceArgs {
+  constructor() {
+    /**
+     * Looping behavior when animation is complete.
+     * @type {"loop"|"single"|"pingpong"|"still"|"dynamic"|"random"}
+     */
+    this.animStyle = "loop";
+    /**
+     * Frames per second while animated.
+     * @type {number}
+     */
+    this.frameRate = 30;
+    /**
+     * Initial (top left) x position.
+     * Overrides x.
+     * @type {number}
+     */
+    this.initialx = 0;
+    /**
+     * Initial (top left) y position.
+     * Overrides y.
+     * @type {number}
+     */
+    this.initialy = 0;
+    /**
+     * Width of each frame.
+     * Overrides w.
+     * @type {number}
+     */
+    this.frameWidth = 0;
+    /**
+     * Height of each frame.
+     * Overrides h.
+     * @type {number}
+     */
+    this.frameHeight = 0;
+    /**
+     * Horizontal gap between frames.
+     * Overrides dx.
+     * @type {number}
+     */
+    this.gapX = 0;
+    /**
+     * Vertical gap between frames.
+     * Overrides dy.
+     * @type {number}
+     */
+    this.gapY = 0;
+    /**
+     * Horizontal frame count.
+     * Overrides frameWidth.
+     * @type {number}
+     */
+    this.hSlices = null;
+    /**
+     * Vertical frame count.
+     * Overrides frameHeight.
+     * @type {number}
+     */
+    this.vSlices = null;
+
+    /** @type {number} */
+    this.x = null;
+    /** @type {number} */
+    this.y = null;
+    /** @type {number} */
+    this.w = null;
+    /** @type {number} */
+    this.h = null;
+    /** @type {number} */
+    this.dx = null;
+    /** @type {number} */
+    this.dy = null;
+  }
+
+  /** List of all valid animation types and end-animation behaviors */
+  static animStyles = [
+    "loop", "single", "pingpong", "still", "dynamic", "random"
+  ];
+}
 Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
   /**
    * 
    * @param {string} src 
-   * @param {number?} frameRate 
-   * @param {string?} animStyle Any of `loop`, `single`, `pingpong`, `still`, `dynamic`
-   * @param {number?} x 
-   * @param {number?} y 
-   * @param {number?} w 
-   * @param {number?} h 
-   * @param {number?} gapX 
-   * @param {number?} gapY 
+   * @param {string} name
+   * @param {bool} abs
+   * @param {SliceArgs} args
    */
-  constructor(src, abs = false, frameRate = 30, animStyle = "loop", x=0, y=0, w=-1, h=-1, gapX=0, gapY=0) {
-    super(src, abs);
-    this.frameRate = frameRate;
-    this.animStyle = animStyle;
+  constructor(src, name, abs, args) {
+    super(src, name, abs);
+    this.frameRate = args.frameRate ?? 30;
+    this.animStyle = args.animStyle ?? "loop";
     this.frames = [];
-    this.cutX = x;
-    this.cutY = y;
-    this.cutW = w;
-    this.cutH = h;
-    this.gapX = gapX;
-    this.gapY = gapY;
-    this.autoSliceType = 0;
+    this.slice(args);
   }
 
   /** @type {number} Width is the maximum width of all frames */
-  get w() {
+  get width() {
     if (this.frames.length < 1) return super.w;
     let ret = 0;
     for (let f of this.frames) {
@@ -165,7 +247,7 @@ Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
     return ret;
   }
   /** @type {number} Height is the maximum height of all frames */
-  get h() {
+  get height() {
     if (this.frames.length < 1) return super.h;
     let ret = 0;
     for (let f of this.frames) {
@@ -189,15 +271,15 @@ Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
   }
 
   addFrame(x, y, w, h) {
-    let r = Math.min(x + w, super.w);
-    let d = Math.min(y + h, super.h);
+    let r = Math.min(x + w, super.width);
+    let d = Math.min(y + h, super.height);
     x = Math.max(x, 0);
     y = Math.max(y, 0);
     if (r <= x || d <= y) {
       console.log("Null frame warning");
       return;
     }
-    let ret = new Gamepad.geo.rec(x, y, r-x, d-y);
+    let ret = new Rectangle(x, y, r-x, d-y);
     this.frames.push(ret);
     return ret;
   }
@@ -207,10 +289,23 @@ Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
   clear() { this.frames.length = 0; }
 
   slice(x, y, w, h, dx, dy) {
-    let fw = super.w;
-    let fh = super.h;
-    w = w < 0 ? fw : w;
-    h = h < 0 ? fh : h;
+    let fw = super.width;
+    let fh = super.height;
+    if (typeof x === "object") {
+      /** @type {SliceArgs} */
+      let args = x;
+      x = args.initialx ?? args.x ?? 0;
+      y = args.initialy ?? args.y ?? 0;
+      if (args.hSlices) w = (fw - x) / args.hSlices;
+      else w = args.frameWidth ?? args.w ?? fw;
+      if (args.vSlices) h = (fh - y) / args.vSlices;
+      else h = args.frameHeight ?? args.h ?? fh;
+      dx = args.gapX ?? args.dx ?? 0;
+      dy = args.gapY ?? args.dy ?? 0;
+    } else {
+      w = w < 0 ? fw : w;
+      h = h < 0 ? fh : h;
+    }
     let vx = x;
     let vy = y;
     while (vy < fh) {
@@ -230,12 +325,83 @@ Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
   frameAt(clock) {
     if (this.frames.length < 1) return -1;
     let frame = Math.floor(this.frameRate * clock);
+    
     switch (this.animStyle) {
       case "loop": return frame % this.frames.length;
       case "single": return Math.min(frame, this.frames.length - 1);
+      case "random":
+        let r = Util.hashString(this.name, frame);
+        return r % this.frames.length;
       default: return 0;
     }
   }
+
+  /**
+   * 
+   * @param {CanvasRenderingContext2D} canvas 
+   * @param {number} [clock=0] 
+   */
+  draw(canvas, clock = 0) {
+    let frame = this.frameAt(clock);
+    if (frame < 0) canvas.drawImage(this.element, 0, 0);
+    else {
+      frame = this.frames[frame];
+      canvas.drawImage(this.element,
+        frame.x, frame.y, frame.w, frame.h,
+        0, 0, frame.w, frame.h
+      );
+    }
+  }
+
 }
+
+// Load default assets so they have nice shortcuts
+new Asset.ImageAsset("enemy/enemy_base.png", "enemy_base");
+new Asset.ImageAsset("enemy/enemy_debris_1.png", "enemy_debris_1");
+new Asset.ImageAsset("enemy/enemy_helicopter.png", "helicopter");
+new Asset.ImageAsset("enemy/heliblades.png", "heliblades");
+new Asset.ImageAsset("enemy/heliblades_spin.png", "heliblades_spin");
+new Asset.ImageAsset("player/player_base.png", "player_base");
+new Asset.ImageAsset("player/player_gold.png", "player_gold");
+new Asset.ImageAsset("player/player_red.png", "player_red");
+new Asset.ImageAsset("player/player_skull.png", "player_skull");
+new Asset.ImageAsset("projectile/bullet_base.png", "bullet_base");
+new Asset.ImageAsset("projectile/bullet_rocket.png", "bullet_rocket");
+new Asset.ImageAsset("projectile/bullet_plasma.png", "bullet_plasma");
+new Asset.ImageAsset("bg/Starfield2.png", "bg0");
+new Asset.ImageAsset("bg/Starfield3.png", "bg1");
+// Animated assets
+new Asset.AnimImageAsset(
+  "projectile/splode.png", "splode", false, {
+    frameRate: 30,
+    animStyle: "loop",
+    hSlices: 4,
+    vSlices: 4
+  }
+);
+new Asset.AnimImageAsset(
+  "projectile/lance.png", "lance", false, {
+    frameRate: 30,
+    animStyle: "loop",
+    hSlices: 4,
+    vSlices: 4
+  }
+);
+new Asset.AnimImageAsset(
+  "projectile/bullet_bright.png", "bullet_bright", false, {
+    frameRate: 30,
+    animStyle: "random",
+    hSlices: 5,
+    vSlices: 1
+  }
+);
+new Asset.AnimImageAsset(
+  "shield.png", "shield", false, {
+    frameRate: 30,
+    animStyle: "loop",
+    hSlices: 10,
+    vSlices: 9
+  }
+);
 
 export default Asset;

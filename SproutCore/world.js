@@ -127,12 +127,20 @@ export default class GameWorld {
 
   addEntity(ent) {
     ent = ent["getProxy"]?.();
-    if (this.entities.includes(ent) || this.entityque.includes(ent)) return;
+    let id = ent["unitid"];
+    let ents = this.entities;
+    for (let i = 0; i < ents.length; i++) {
+      if (ents[i]["unitid"] == id) return;
+    }
     this.entityque.push(ent);
   }
   addBullet(bul) {
     bul = bul["getProxy"]?.();
-    if (this.bullets.includes(bul) || this.bulletque.includes(bul)) return;
+    let id = bul["unitid"];
+    let buls = this.bullets;
+    for (let i = 0; i < ents.length; i++) {
+      if (ents[i]["unitid"] == id) return;
+    }
     this.bulletque.push(bul);
   }
 

@@ -1,3 +1,4 @@
+import Asset from "./asset.js";
 
 const deg = Math.PI / 180;
 
@@ -168,18 +169,22 @@ export default class Graphics {
    * @param {CanvasImageSource} img 
    * @param {number} x x position
    * @param {number} y y position
-   * @param {number} sx horizontal scale
-   * @param {number} sy vertical scale
-   * @param {number} r angle, in degrees
-   * @param {number} cx x position of pivot point
-   * @param {number} cy y position of pivot point
+   * @param {number} [sx=1] horizontal scale
+   * @param {number} [sy=1] vertical scale
+   * @param {number} [r=0] angle, in degrees
+   * @param {number} [cx=x] x position of pivot point
+   * @param {number} [cy=y] y position of pivot point
+   * @param {number} [clock=0] time in seconds for animated images
    */
-  draw(img, x, y, sx, sy, r = 0, cx = null, cy = null) {
-    if (img.element) img = img.element;
+  draw(img, x, y, sx = 1, sy = 1, r = 0, cx = null, cy = null, clock = 0) {
     const c = this.c;
     c.save();
     this.transform(x, y, sx, sy, r, cx ?? x, cy ?? y);
-    c.drawImage(img, 0, 0);
+    if (img instanceof Asset) {
+      img.draw(c, clock);
+    } else {
+      c.drawImage(img, 0, 0);
+    }
     c.restore();
   }
   /**
@@ -193,14 +198,18 @@ export default class Graphics {
    * @param {number} r angle, in degrees
    * @param {number} cx x position of pivot point
    * @param {number} cy y position of pivot point
+   * @param {number} [clock=0] time in seconds for animated images
    */
-  drawCentered(img, x, y, sx, sy, r = 0, cx = null, cy = null) {
-    if (img.element) img = img.element;
+  drawCentered(img, x, y, sx, sy, r = 0, cx = null, cy = null, clock = 0) {
     const c = this.c;
     c.save();
     this.transform(x, y, sx, sy, r, cx ?? x, cy ?? y);
-    c.translate(-img.naturalWidth / 2, -img.naturalHeight / 2);
-    c.drawImage(img, 0, 0);
+    c.translate(-(img.width ?? img.w ?? img.naturalWidth) / 2, -(img.height ?? img.h ?? img.naturalHeight) / 2);
+    if (img instanceof Asset) {
+      img.draw(c, clock);
+    } else {
+      c.drawImage(img, 0, 0);
+    }
     c.restore();
   }
 
@@ -217,13 +226,17 @@ export default class Graphics {
    * @param {number} r angle, in degrees
    * @param {number} cx x position of pivot point
    * @param {number} cy y position of pivot point
+   * @param {number} [clock=0] time in seconds for animated images
    */
-  drawRect(img, x, y, w, h, r = 0, cx = null, cy = null) {
-    if (img.element) img = img.element;
+  drawRect(img, x, y, w, h, r = 0, cx = null, cy = null, clock = 0) {
     const c = this.c;
     c.save();
-    this.transform(x, y, w / img.naturalWidth, h / img.naturalHeight, r, cx ?? x, cy ?? y);
-    c.drawImage(img, 0, 0);
+    this.transform(x, y, w / (img.width ?? img.w ?? img.naturalWidth), h / (img.height ?? img.h ?? img.naturalHeight), r, cx ?? x, cy ?? y);
+    if (img instanceof Asset) {
+      img.draw(c, clock);
+    } else {
+      c.drawImage(img, 0, 0);
+    }
     c.restore();
   }
 }
