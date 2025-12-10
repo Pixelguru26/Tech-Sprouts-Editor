@@ -28,6 +28,8 @@ const SproutCoreClass = class SproutCore {
   constructor(constab) {
     // this.assets = new UAssetManager();
     this.pyInitialized = false;
+    this.py = null;
+    this.pyReceivers = [];
   }
   async init(constab) {
     this.constab = constab;
@@ -85,6 +87,15 @@ const SproutCoreClass = class SproutCore {
     this.callback("mouseup", evt.button, evt.x - bounds.left, evt.y - bounds.top);
   }
 
+  addPyReceiver(fn) {
+    if (!this.pyReceivers.includes(fn)) {
+      this.pyReceivers.push(fn);
+      if (this.py !== null) {
+        fn(this.py);
+      }
+    }
+  }
+
   /**
    * Sets up entire Python environment.
    * Begins game as a side effect.
@@ -124,6 +135,8 @@ const SproutCoreClass = class SproutCore {
     // Load to Python
     let env = this.py.pyimport("sproutcore");
     this.game = env["game"];
+
+    this.pyReceivers.forEach((v) => v(this.py));
 
     // Load user code
     this.py.FS.writeFile(

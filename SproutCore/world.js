@@ -138,8 +138,8 @@ export default class GameWorld {
     bul = bul["getProxy"]?.();
     let id = bul["unitid"];
     let buls = this.bullets;
-    for (let i = 0; i < ents.length; i++) {
-      if (ents[i]["unitid"] == id) return;
+    for (let i = 0; i < buls.length; i++) {
+      if (buls[i]["unitid"] == id) return;
     }
     this.bulletque.push(bul);
   }

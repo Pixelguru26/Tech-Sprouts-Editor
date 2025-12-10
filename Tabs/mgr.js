@@ -31,7 +31,7 @@ const TabManager = class TabManager {
   }
 
   hashChange(hash) {
-    let hashTab = "docs"; // Magic string but it's just a default
+    let hashTab = "test"; // Magic string but it's just a default
     for (let entry of hash.split('&')) {
       if (entry.startsWith("tab=")) {
         hashTab = entry.substring("tab=".length);

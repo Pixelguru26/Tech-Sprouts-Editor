@@ -16,6 +16,7 @@
       crossorigin="anonymous" defer>
     </script>
     <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./Tabs/filemgr.css" />
   </head>
   <body>
     <!-- <canvas id="gl-canvas" width="640" height="480"></canvas>
@@ -28,6 +29,7 @@
       <a id="tabhead-game" class="tabhead" href="#tab=game">Game</a>
       <a id="tabhead-code" class="tabhead" href="#tab=code">Code</a>
       <a id="tabhead-cons" class="tabhead" href="#tab=cons">Console</a>
+      <a id="tabhead-test" class="tabhead" href="#tab=test">Testing</a>
     </div>
 
     <!-- Content -->
@@ -43,6 +45,9 @@
 
       <!-- Console -->
       <div class="tabcontent" id="tab-cons"></div>
+
+      <!-- Dev test environment -->
+      <div class="tabcontent" id="tab-test"></div>
     </div>
 
     <script type="module">
@@ -57,6 +62,8 @@
       import SproutCore from "./SproutCore/core.js";
       document.SproutCore = SproutCore;
       SproutCore.init(customConsole);
+      import Test from "./Tabs/test.js";
+      Test();
       let reloadIcon = document.getElementById("game-reload");
       reloadIcon.addEventListener("pointerup", async () => {
         try {
@@ -74,12 +81,12 @@
       (() => {
         // Stores and switches location (tab & docs)
         // Todo: use to store docs section
-        let tabs = new TabManager("docs", "game", "code", "cons");
+        let tabs = new TabManager("docs", "game", "code", "cons", "test");
         let hashChange = () => {
           let hash = window.location.hash.substring(1);
           let success = tabs.hashChange(hash);
-          if (!success && window.location.hash !== "#tab=docs") {
-            window.location.hash = "#tab=docs";
+          if (!success && window.location.hash !== "#tab=test") {
+            window.location.hash = "#tab=test";
           }
         }
         window.addEventListener("hashchange", hashChange);
