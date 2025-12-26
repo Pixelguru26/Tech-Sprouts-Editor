@@ -946,7 +946,7 @@ class ShootingEnemyEntity(BasicEnemyEntity):
       else:
         # No need to rotate
         this.ray.move(this.x - this.ray.ax, this.y - this.ray.ay)
-    if game.world.firstIntersection(this.ray, this.__testTarget):
+    if game.world.testIntersection(this.ray, this.__testTarget):
       return True
     return True
   
@@ -1153,6 +1153,7 @@ class StatePlay(GameState):
       HelicopterEnemyEntity.spawnTimer.stop()
     game.bg0.dy = 0
     game.bg1.dy = 0
+    game.world.clear()
     return super().exit(nextState)
   def update(this, dt):
     game.world.update(dt)
@@ -1309,11 +1310,11 @@ class GameClass:
       this.state.draw()
 
   def keydown(this, key):
-    this.keyreg[key] = True
+    this.keyreg[key.lower()] = True
     if (this.state != None):
       this.state.keydown(key)
   def keyup(this, key):
-    this.keyreg[key] = False
+    this.keyreg[key.lower()] = False
     if (this.state != None):
       this.state.keyup(key)
   def mousedown(this, b, x, y):
@@ -1333,6 +1334,7 @@ class GameClass:
           this.keyup(key)
     this.keyreg.clear
   def keyState(this, key):
+    key = key.lower()
     return (key in this.keyreg and this.keyreg[key])
   def scroll(this, x, y, dx, dy):
     if (this.state != None):
