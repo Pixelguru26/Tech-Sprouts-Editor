@@ -86,8 +86,8 @@ Util.autoupdate = AutoUpdateUtil
 class SmoothUtil(AutoUpdateUtil):
   """
   An abstraction for a number that approaches a target value
-  over time at a constant speed.\n
-  val is the target at any given time.\n
+  over time at a constant speed.\\n
+  val is the target at any given time.\\n
   smoothed is the output value.
   """
   def __init__(this, val, min, max, time = 1, attach=True):
@@ -123,11 +123,11 @@ Util.autoupdate.smooth = SmoothUtil
 
 class VerletUtil(AutoUpdateUtil):
   """
-  An attempt to abstract away physics integration properly.\n
-  Handles integration of one independent axis entirely.\n
+  An attempt to abstract away physics integration properly.\\n
+  Handles integration of one independent axis entirely.\\n
   To apply force on this axis, set the instance accel value
   to the appropriate acceleration. In the next update step,
-  this.accel will be applied.\n
+  this.accel will be applied.\\n
   Additionally, this.vel exposes the velocity of this
   value, which can be set to apply a velocity instantaneously
   (equivalent to infinite acceleration) or read as a
@@ -265,6 +265,8 @@ class Entity:
     this.age = 0
     this.lifetime = 30
     this.verlet = False
+    this.lastx = None
+    this.lasty = None
     this.vx = 0
     this.vy = 0
     this.ax = 0
@@ -392,6 +394,18 @@ class Entity:
     SproutCore.Entity.draw(this)
 
   def update(this, dt):
+    if this.verlet:
+      if this.lastx == None: this.lastx = this.x
+      if this.lasty == None: this.lasty = this.y
+      tempx = this.x
+      tempy = this.y
+      # Translation: x += dx + a * dt^2
+      this.x = this.x * 2 - this.lastx + this.ax * dt * dt
+      this.y = this.y * 2 - this.lasty + this.ay * dt * dt
+      this.lastx = tempx
+      this.lasty = tempy
+      this.vx = (this.x - tempx) / dt
+      this.vy = (this.y - tempy) / dt
     this.age = this.age + dt
     if (this.age > this.lifetime and this.lifetime > 0):
       this.delete("lifetime")
@@ -433,6 +447,8 @@ class Entity:
   def forward(this, distance = 1):
     rad = this.angle / 180 * pi
     if (this.collisionType == "line"):
+      # The default implementation for line segments
+      # moves the entire line segment. Projectiles use a custom override.
       this.body.ax += cos(rad) * distance
       this.body.ay += sin(rad) * distance
       this.body.bx += cos(rad) * distance
@@ -444,9 +460,12 @@ class Entity:
   def backward(this, distance = 1):
     this.forward(-distance)
   
+  # Moves the entity 90° clockwise from its facing direction by the specified number of pixels.
   def right(this, distance = 1):
     rad = (this.angle + 90) / 180 * pi
     if (this.collisionType == "line"):
+      # The default implementation for line segments
+      # moves the entire line segment. Projectiles use a custom override.
       this.body.ax += cos(rad) * distance
       this.body.ay += sin(rad) * distance
       this.body.bx += cos(rad) * distance
@@ -542,6 +561,79 @@ class BulletEntity(Entity):
     this.body.by += sin(rad) * distance
 Entity.bulletEntity = BulletEntity # type: ignore
 
+# Similar to projectiles, but maintains a register of contacts
+# to avoid damaging any target twice.
+class ExplosionEntity(Entity):
+  def __init__(this):
+    super().__init__()
+    this.attack = 300
+    this.speed = 0
+    this.sprite = game.asset.getAsset("splode")
+    this.lifetime = this.sprite.duration
+    this.collisionType = "circle"
+    # Extra trimming due to extra space in the sprite
+    this.body.r = this.sprite.width / 4
+    this.reg = dict()
+    this.reg[this.unitid] = True
+
+  def touch(this, other):
+    if Entity.getRelationship(this.team, other.team) == "hostile":
+      if not (other.unitid in this.reg):
+        this.reg[other.unitid] = True
+        this.impact(other)
+  
+  def impact(this, other):
+    other.damage(this.attack)
+
+class ExplodingBulletEntity(BulletEntity):
+  def __init__(this):
+    super().__init__()
+    this.sprite = game.asset.ImageAsset.getImage("projectile/bullet_rocket.png")
+  
+  def impact(this, other):
+    ent = ExplosionEntity()
+    ent.team = this.team
+    ent.x = this.x
+    ent.y = this.y
+    game.world.addBullet(ent)
+    return super().impact(other)
+
+class LanceEntity(ExplosionEntity):
+  def __init__(this):
+    super().__init__()
+    this.sprite = game.asset.getAsset("lance")
+    this.lifetime = this.sprite.duration
+    # Division by 2 shouldn't be necessary, what's going on?
+    this.body = game.geo.LineSeg.new(0, 0, this.sprite.width / 2, 0)
+  
+  def impact(this, other):
+    other.damage(this.attack)
+  
+  def __nop__(this): pass
+
+  def __get_x__(this):
+    return this.body.ax
+  def __set_x__(this, v):
+    this.body.bx = v + (this.body.bx - this.body.ax)
+    this.body.ax = v
+  x = property(__get_x__, __set_x__, __nop__)
+
+  def __get_y__(this):
+    return this.body.ay
+  def __set_y__(this, v):
+    this.body.by = v + (this.body.by - this.body.ay)
+    this.body.ay = v
+  y = property(__get_y__, __set_y__, __nop__)
+
+  def __get_angle__(this):
+    if hasattr(this, "body"):
+      return this.body.angle
+    return 0
+  def __set_angle__(this, v):
+    if hasattr(this, "body"):
+      this.body.angle = v
+  angle = property(__get_angle__, __set_angle__, __nop__)
+
 class LivingEntity(Entity):
   def __init__(this):
     super().__init__()
@@ -556,9 +648,90 @@ class LivingEntity(Entity):
       this.delete("health")
 Entity.livingEntity = LivingEntity # type: ignore
 
+class EntityWeapon():
+  # Generalized system for projectile weapon systems.
+  # Can handle semi automatic and fully automatic fire.
+  def __init__(
+      this,
+      power = 34,
+      ammo = 10,
+      rate = 10,
+      auto = False,
+      offsets = [[-10, 0, 0], [10, 0, 0]],
+      bullet = BulletEntity,
+      owner = None
+    ):
+    this.power = power
+    this.ammo = ammo
+    this.offsets = offsets
+    this.barrel = 0
+    this.bullet = bullet
+    this.auto = auto
+    this.timer = TimerUtil(this.tick, 1 / rate)
+    if owner != None: this.owner = owner
+    this.fixLag = True
+    this.useAmmo = 1
+  
+  def __get_rate__(this):
+    return 1 / this.timer.interval
+  def __set_rate__(this, v):
+    this.timer.interval = 1 / v
+  def __nop__(this): pass
+  rate = property(__get_rate__, __set_rate__, __nop__)
+
+  # Checks if enough ammunition remains to fire the weapon once.
+  # If there is, consumes the ammunition and returns True.
+  def attemptUseAmmo(this):
+    # Ammo consumption accounts for negative ammo values
+    # and potentially negative ammo consumption values.
+    # Regardless, stops and clamps ammo count to 0
+    # when ammo count crosses 0.
+    if this.useAmmo != False and this.useAmmo != 0:
+      if this.ammo == 0: return False
+      else:
+        prev = this.ammo
+        this.ammo = this.ammo - this.useAmmo
+        if prev * this.ammo < 0:
+          this.ammo = 0
+    return True
+  
+  # Called during firing. Eases effects like the alternating
+  # left/right fire pattern of the player.
+  def cycleBarrel(this):
+    offset = this.offsets[this.barrel]
+    this.barrel = (this.barrel + 1) % len(this.offsets)
+    return offset
+
+  # Mostly used internally, but can also be called externally.
+  # Notice that it follows the signature of a timer callback.
+  def fire(this, timer = None, time = 0, lag = 0):
+    if timer == None:
+      timer = this.timer
+    # Construct and fire bullet
+    # Cycle barrels
+    if this.attemptUseAmmo():
+      offset = this.cycleBarrel()
+      bullet = this.owner.shoot(this.bullet, offset[0], offset[1], offset[2])
+      bullet.attack = this.power
+      if lag > 0:
+        # Lag compensation
+        bullet.update(lag)
+      return bullet
+
+  # Internal function for the timer to use
+  def tick(this, timer, time, lag):
+    this.fire(timer, time, lag)
+  # Used for fully automatic fire
+  def sustain(this):
+    if this.auto:
+      this.timer.sustain()
+  # Fires once. Not necessary to call when using sustain().
+  def beginFire(this):
+    return this.fire(this.timer)
+
 class PlayerWeapon():
   def __init__(this, power = 34, ammo = 10, rate = 10, auto = False, offsets = [[-10, 0, 0], [10, 0, 0]], bullet = BulletEntity, owner = None):
-    this.power = 34
+    this.power = power
     this.ammo = ammo
     this.offsets = offsets
     this.barrel = 0
@@ -626,7 +799,7 @@ class PlayerEntity(LivingEntity):
     this.lifetime = -1
     this.team = "player"
     # this.sprite = game.asset.ImageAsset.getImage("player/player_base.png") # pyright: ignore[reportOptionalMemberAccess]
-    this.sprite = game.asset.getAsset("splode") # pyright: ignore[reportOptionalMemberAccess]
+    this.sprite = game.asset.getAsset("player_base") # pyright: ignore[reportOptionalMemberAccess]
     this.collisionType = "circle"
     this.speed = 450
     this.body.r = 50
@@ -643,7 +816,7 @@ class PlayerEntity(LivingEntity):
       34, 1000, 10, True, [[-16, 0, 0], [16, 0, 0]], BulletEntity
     ))
     this.addWeapon("Shift", PlayerWeapon(
-      34, 20, 1, False, [[-24, -6, 0], [24, -6, 0]], BulletEntity
+      300, 20, 1, False, [[-24, -6, 0], [24, -6, 0]], LanceEntity
     ))
   def __nop__(this): pass
   def __get_pwep__(this):
@@ -741,7 +914,72 @@ class BasicEnemyEntity(LivingEntity):
 
 Entity.basicEnemyEntity = BasicEnemyEntity
 
-def temp(timer, time, lag):
+class ShootingEnemyEntity(BasicEnemyEntity):
+  def __init__(this):
+    super().__init__()
+    # Controls whether the entity fires aimlessly or only when facing the player
+    this.responsive = True
+    # Rays cannot (presently) be infinite, which is fine because neither is fire range.
+    # This is the distance at which players will be detected if responsive is True.
+    this.range = 1000
+    this.ray = None
+    this.__lastAngle = this.angle
+    this.weapon = EntityWeapon(34, -1, 1, True, [[-10, 0, 0], [10, 0, 0]], BulletEntity, this)
+  
+  def __testTarget(this, other):
+    if Entity.getRelationship(this.team, other.team) == "hostile":
+      return True
+    return False
+  
+  def enemySighted(this):
+    rad = this.angle / 180 * pi
+    if this.ray == None:
+      this.ray = game.geo.LineSeg.new(this.x, this.y, cos(rad) * this.range, sin(rad) * this.range)
+    else:
+      if this.angle != this.__lastAngle:
+        # Angle needs to be updated
+        this.__lastAngle = this.angle
+        this.ray.ax = this.x
+        this.ray.ay = this.y
+        this.ray.bx = cos(rad) * this.range
+        this.ray.by = sin(rad) * this.range
+      else:
+        # No need to rotate
+        this.ray.move(this.x - this.ray.ax, this.y - this.ray.ay)
+    if game.world.firstIntersection(this.ray, this.__testTarget):
+      return True
+    return True
+  
+  def update(this, dt):
+    super().update(dt)
+    if this.responsive:
+      if this.enemySighted(): this.weapon.sustain()
+    else:
+      this.weapon.sustain()
+  
+  def delete(this, reason=None):
+    this.weapon.timer.detach()
+    return super().delete(reason)
+
+Entity.shootingEnemyEntity = ShootingEnemyEntity
+
+class HelicopterEnemyEntity(ShootingEnemyEntity):
+  def __init__(this):
+    super().__init__()
+    this.sprite = game.asset.ImageAsset.getImage("enemy/enemy_helicopter.png")
+    this.bladeSprite = game.asset.ImageAsset.getImage("enemy/heliblades_spin.png")
+  def draw(this):
+    super().draw()
+    if this.autoscale:
+      if this.collisionType == "circle":
+        scale = (this.body.r * 2) / this.bladeSprite.width
+        SproutCore.g.drawCentered(this.bladeSprite, this.x, this.y, scale, scale, this.angle + this.age * 360)
+    else:
+      SproutCore.g.drawCentered(this.bladeSprite, this.x, this.y, this.scalex, this.scaley, this.angle + this.age * 360)
+
+Entity.helicopterEnemyEntity = HelicopterEnemyEntity
+
+def temp1(timer, time, lag):
   if (game.state == game.gamestates["play"]):
     x = random() * 500 + 50 # 50 pixels from either side
     ent = BasicEnemyEntity()
@@ -750,7 +988,76 @@ def temp(timer, time, lag):
     ent.angle = 90
     game.world.addEntity(ent)
     ent.update(lag)
-BasicEnemyEntity.spawnTimer = RandTimerUtil(temp, 0.5, 4)
+BasicEnemyEntity.spawnTimer = RandTimerUtil(temp1, 0.5, 4)
+
+def temp2(timer, time, lag):
+  if (game.state == game.gamestates["play"]):
+    x = random() * 500 + 50
+    ent = HelicopterEnemyEntity()
+    ent.x = x
+    ent.y = -ent.r
+    ent.angle = 90
+    game.world.addEntity(ent)
+    ent.update(lag)
+HelicopterEnemyEntity.spawnTimer = RandTimerUtil(temp2, 0.5, 4)
+
+# Simple automatic scrolling background renderer
+class Background():
+  def __init__(this, sprite):
+    this.sprite = sprite
+    this.x = 0
+    this.y = 0
+    this.xutil = SmoothUtil(0, -10, 10, 100)
+    this.yutil = SmoothUtil(0, -10, 10, 100)
+    this.sx = 1
+    this.sy = 1
+    this.age = 0
+    this.alternate = True
+  
+  def __nop__(this): pass
+
+  def __get_ax__(this):
+    return (this.xutil.max - this.xutil.min) / this.xutil.time
+  def __set_ax__(this, v):
+    this.xutil.time = v * (this.xutil.max - this.xutil.min)
+  ax = property(__get_ax__, __set_ax__, __nop__)
+
+  def __get_ay__(this):
+    return (this.yutil.max - this.yutil.min) / this.yutil.time
+  def __set_ay__(this, v):
+    this.yutil.time = v * (this.yutil.max - this.yutil.min)
+  ay = property(__get_ay__, __set_ay__, __nop__)
+
+  def __get_dx__(this):
+    return this.xutil.smoothed
+  def __set_dx__(this, v):
+    this.xutil.val = v
+  def __get_dy__(this):
+    return this.yutil.smoothed
+  def __set_dy__(this, v):
+    this.yutil.val = v
+  dx = property(__get_dx__, __set_dx__, __nop__)
+  dy = property(__get_dy__, __set_dy__, __nop__)
+
+  def update(this, dt):
+    this.x += this.dx * dt
+    this.y += this.dy * dt
+    this.age += dt
+  
+  def draw(this):
+    alt = (this.y / (this.sprite.height * this.sy)) % 2 > 1
+    x0 = (this.x % (this.sprite.width * this.sx)) - this.sprite.width * this.sx * 2
+    y = (this.y % (this.sprite.height * this.sy)) - this.sprite.height * this.sy * 2
+    while y < SproutCore.g.c.canvas.height:
+      y += this.sprite.height * this.sy
+      x = x0
+      if this.alternate:
+        alt = not alt
+        if alt:
+          x = x0 + (this.sprite.width * this.sx) / 2
+      while x < SproutCore.g.c.canvas.width:
+        x += this.sprite.width * this.sx
+        SproutCore.g.draw(this.sprite, x, y, this.sx, this.sy)
 
 class StateMenu(GameState):
   def __init__(this):
@@ -826,7 +1133,6 @@ class StateMenu(GameState):
   def setPlay(this, tgt, evt):
     game.setState("play")
 
-
 class StatePlay(GameState):
   def __init__(this):
     super().__init__()
@@ -836,9 +1142,17 @@ class StatePlay(GameState):
     game.world.addEntity(game.player)
     if hasattr(BasicEnemyEntity, "spawnTimer"):
       BasicEnemyEntity.spawnTimer.start()
+    if hasattr(HelicopterEnemyEntity, "spawnTimer"):
+      HelicopterEnemyEntity.spawnTimer.start()
+    game.bg0.dy = 1/5
+    game.bg1.dy = 1/10
   def exit(this, nextState=None):
     if hasattr(BasicEnemyEntity, "spawnTimer"):
       BasicEnemyEntity.spawnTimer.stop()
+    if hasattr(HelicopterEnemyEntity, "spawnTimer"):
+      HelicopterEnemyEntity.spawnTimer.stop()
+    game.bg0.dy = 0
+    game.bg1.dy = 0
     return super().exit(nextState)
   def update(this, dt):
     game.world.update(dt)
@@ -852,7 +1166,6 @@ class StatePlay(GameState):
     game.world.mousedown(b, x, y)
   def mouseup(this, b, x, y):
     game.world.mouseup(b, x, y)
-
 
 class StateDead(GameState):
   def __init__(this):
@@ -933,6 +1246,16 @@ class GameClass:
     this.gamestate.StatePlay = StatePlay
     this.gamestate.StateDead = StateDead
   def init(this):
+    this.bg0 = Background(game.asset.getAsset("bg0"))
+    this.bg1 = Background(game.asset.getAsset("bg1"))
+    this.bg0.ax = 10
+    this.bg0.ay = 10
+    this.bg1.ax = 20
+    this.bg1.ay = 20
+    this.bg0.sx = 1.2
+    this.bg0.sy = 1.2
+    this.bg1.sx = 0.4
+    this.bg1.sy = 0.4
     this.gamestates["menu"] = StateMenu()
     this.addMenuButton = this.gamestates["menu"].addMenuButton
     this.gamestates["play"] = StatePlay()
@@ -971,9 +1294,17 @@ class GameClass:
   
   def update(this, dt):
     this.util.autoupdate.updateAll(dt)
+    this.bg0.x += this.bg0.sprite.width * this.bg0.dx * dt
+    this.bg0.y += this.bg0.sprite.height * this.bg0.dy * dt
+    this.bg1.x += this.bg1.sprite.width * this.bg1.dx * dt
+    this.bg1.y += this.bg1.sprite.height * this.bg1.dy * dt
     if (this.state != None):
       this.state.update(dt)
   def draw(this):
+    SproutCore.g.c.globalCompositeOperation = "lighter"
+    this.bg0.draw()
+    this.bg1.draw()
+    SproutCore.g.c.globalCompositeOperation = "source-over"
     if (this.state != None):
       this.state.draw()
 

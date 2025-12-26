@@ -139,7 +139,7 @@ Asset.ImageAsset = class ImageAsset extends Asset {
 }
 
 /**
- * Class outline used to provide hints in IDEs
+ * Class outline used to provide type hints in development
  */
 class SliceArgs {
   constructor() {
@@ -288,7 +288,7 @@ Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
    */
   clear() { this.frames.length = 0; }
 
-  slice(x, y, w, h, dx, dy) {
+  slice(x, y, w, h, dx = 0, dy = 0) {
     let fw = super.width;
     let fh = super.height;
     if (typeof x === "object") {
@@ -306,15 +306,10 @@ Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
       w = w < 0 ? fw : w;
       h = h < 0 ? fh : h;
     }
-    let vx = x;
-    let vy = y;
-    while (vy < fh) {
-      while (vx < fw) {
+    for (let vy = y; vy < fh; vy += h + dy) {
+      for (let vx = x; vx < fw; vx += w + dx) {
         this.addFrame(vx, vy, w, h);
-        vx += w + dx;
       }
-      vx = x;
-      vy += h + dy;
     }
   }
 
@@ -374,7 +369,7 @@ new Asset.ImageAsset("bg/Starfield3.png", "bg1");
 new Asset.AnimImageAsset(
   "projectile/splode.png", "splode", false, {
     frameRate: 30,
-    animStyle: "loop",
+    animStyle: "single",
     hSlices: 4,
     vSlices: 4
   }
@@ -382,7 +377,7 @@ new Asset.AnimImageAsset(
 new Asset.AnimImageAsset(
   "projectile/lance.png", "lance", false, {
     frameRate: 30,
-    animStyle: "loop",
+    animStyle: "single",
     hSlices: 4,
     vSlices: 4
   }

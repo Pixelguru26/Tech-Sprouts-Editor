@@ -6,7 +6,7 @@ import Asset from "./asset.js";
 import Graphics from "./graphics.js";
 import JSLib from "./../Tabs/lib.js";
 
-const DEVMODE = false;
+const DEVMODE = true;
 
 const SproutCoreClass = class SproutCore {
   // ==========================================

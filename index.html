@@ -29,7 +29,7 @@
       <a id="tabhead-game" class="tabhead" href="#tab=game">Game</a>
       <a id="tabhead-code" class="tabhead" href="#tab=code">Code</a>
       <a id="tabhead-cons" class="tabhead" href="#tab=cons">Console</a>
-      <a id="tabhead-test" class="tabhead" href="#tab=test">Testing</a>
+      <!-- <a id="tabhead-test" class="tabhead" href="#tab=test">Testing</a> -->
     </div>
 
     <!-- Content -->
@@ -47,7 +47,7 @@
       <div class="tabcontent" id="tab-cons"></div>
 
       <!-- Dev test environment -->
-      <div class="tabcontent" id="tab-test"></div>
+      <!-- <div class="tabcontent" id="tab-test"></div> -->
     </div>
 
     <script type="module">
@@ -63,7 +63,7 @@
       document.SproutCore = SproutCore;
       SproutCore.init(customConsole);
       import Test from "./Tabs/test.js";
-      Test();
+      // Test();
       let reloadIcon = document.getElementById("game-reload");
       reloadIcon.addEventListener("pointerup", async () => {
         try {
@@ -81,7 +81,7 @@
       (() => {
         // Stores and switches location (tab & docs)
         // Todo: use to store docs section
-        let tabs = new TabManager("docs", "game", "code", "cons", "test");
+        let tabs = new TabManager("docs", "game", "code", "cons");
         let hashChange = () => {
           let hash = window.location.hash.substring(1);
           let success = tabs.hashChange(hash);
