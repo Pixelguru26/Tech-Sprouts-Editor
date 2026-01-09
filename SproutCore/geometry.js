@@ -50,6 +50,24 @@ const Geo = class Geo {
   }
 
   /**
+   * Returns `v` moved closer to `tgt` by up to `rate`.
+   * In other words, repeatedly executing `v = approach(v, 1, tgt)`
+   * will cause `v` to converge on `tgt` by 1 each cycle.
+   * Will not overshoot the target.
+   * @param {number} v Current value.
+   * @param {number} rate Maximum amount v can change. Assumed to be positive.
+   * @param {number} tgt Target value.
+   * @returns 
+   */
+  static approach(v, rate, tgt) {
+    let dist = Math.abs(tgt - v);
+    if (dist > rate) {
+      if (tgt < v) return v - rate;
+      else return tgt + rate;
+    } else return tgt;
+  }
+
+  /**
    * Returns point `(x, y)` along the line segment between the points `a` and `b`.\
    * `v` is the distance along this line, with `v=0` corresponding to `a`,\
    * and `v=1` corresponding to `b`.\
@@ -525,6 +543,11 @@ export class Shape {
    */
   intersects(other) {
     return Geo.intersect(this, other);
+  }
+
+  move(dx, dy) {
+    this.x += dx;
+    this.y += dy;
   }
 }
 Geo.shape = Shape;
@@ -1249,6 +1272,13 @@ export class LineSeg extends Shape {
       LineSeg.pointBehind(bax, bay, aax, aay, abx, aby) != LineSeg.pointBehind(bbx, bby, aax, aay, abx, aby) &&
       LineSeg.pointBehind(aax, aay, bax, bay, bbx, bby) != LineSeg.pointBehind(abx, aby, bax, bay, bbx, bby)
     );
+  }
+
+  move(dx, dy) {
+    this.ax += dx;
+    this.ay += dy;
+    this.bx += dx;
+    this.by += dy;
   }
 }
 Geo.LineSeg = LineSeg;

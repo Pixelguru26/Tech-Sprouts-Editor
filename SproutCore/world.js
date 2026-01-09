@@ -11,6 +11,45 @@ export default class GameWorld {
 
   new() { return new GameWorld(); }
 
+  /**
+   * Test all other entities and bullets in the world
+   * for intersection with the test entity.
+   * Returns true if one intersects.
+   * If a condition function is provided, 
+   * returns true if an entity intersects
+   * for which that function returns true.
+   * @param {Entity|Shape} testEnt 
+   * @param {function(Entity): boolean} condition 
+   * @returns {boolean} true if the condition is met on an intersecting entity.
+   */
+  testIntersection(testEnt, condition = null) {
+    let ents = this.entities;
+    let ent, body;
+    // This is needed to allow intersection tests
+    // between raw shapes and the world entities.
+    testEnt = testEnt["body"] ?? testEnt;
+    // Test entities
+    for (let i = 0; i < ents.length; i++) {
+      ent = ents[i];
+      if (ent["alive"]) {
+        if ((body = ent["body"]) && testEnt["intersects"](body)) {
+          if (condition === null || condition(ent)) return true;
+        }
+      }
+    }
+    // Test bullets
+    ents = this.bullets;
+    for (let i = 0; i < ents.length; i++) {
+      ent = ents[i];
+      if (ent["alive"]) {
+        if (ent["body"] && testEnt["intersects"](ent["body"])) {
+          if (condition === null || condition(ent)) return true;
+        }
+      }
+    }
+    return false;
+  }
+
   update(dt) {
     let entq = this.entityque;
     let bulq = this.bulletque;
@@ -34,6 +73,7 @@ export default class GameWorld {
       try {
         bul["update"]?.(dt);
       } catch (e) {
+        console.log("BROKEN BULLET", bul);
         GameWorld.SproutCore.error(e);
         throw new Error(`Error on update of bullet #${i}`, { cause: e });
       }
@@ -45,6 +85,7 @@ export default class GameWorld {
       try {
         ent["update"]?.(dt);
       } catch (e) {
+        console.log("BROKEN ENTITY", ent)
         GameWorld.SproutCore.error(e);
         throw new Error(`Error on update of entity #${i}`, { cause: e });
       }
@@ -132,14 +173,22 @@ export default class GameWorld {
     for (let i = 0; i < ents.length; i++) {
       if (ents[i]["unitid"] == id) return;
     }
+    ents = this.entityque;
+    for (let i = 0; i < ents.length; i++) {
+      if (ents[i]["unitid"] == id) return;
+    }
     this.entityque.push(ent);
   }
   addBullet(bul) {
     bul = bul["getProxy"]?.();
     let id = bul["unitid"];
     let buls = this.bullets;
-    for (let i = 0; i < ents.length; i++) {
-      if (ents[i]["unitid"] == id) return;
+    for (let i = 0; i < buls.length; i++) {
+      if (buls[i]["unitid"] == id) return;
+    }
+    buls = this.bulletque;
+    for (let i = 0; i < buls.length; i++) {
+      if (buls[i]["unitid"] == id) return;
     }
     this.bulletque.push(bul);
   }

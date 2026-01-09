@@ -263,17 +263,89 @@ const data = [
           As I always like to say, programming is great because
           you make the computer do all the hard math for you!<br>
           In Python, this is really easy.
-          Simply take an expression and replace the text in your print:
+          Simply take the expression and replace the text in your print:
         `),
         codeblock(`print(6 * 7)`),
         html(`
+          When this runs, you should see the result in the
+          console tab of the editor.
+          This is what we call an <b>expression</b>:
+          any math that can be performed in a single exact way to produce a result.<br>
+          As you might guess, this means expressions can do a lot
+          more than a simple pocket calculator:
+        `),
+        codeblock(`print(3 + 4/(2*3*4) - 4/(4*5*6) + 4/(6*7*8) - 4/(8*9*10) + 4/(10*11*12))`),
+        html(`
+          Yep, that sure is some <b>math</b>. Luckily for us, we don't have
+          to touch it. If you run this, you'll see the computer calculate
+          all of that in less than the blink of an eye to give you the result:
+          a number close to π.<br/>
         `)
       ),
       section("tutorial04", "011: Memories",
-
+        html(`
+          In the previous tutorial, we plugged in values to make
+          the code do basic math for us.
+          For basic formulas, this is fine, but it doesn't let you
+          store values for later, or react to different information.
+          For this, we're going to need variables, which is really
+          just a five dollar word for actually naming stuff.<br/>
+          In Python, using variables is really simple:
+        `),
+        codeblock(`
+          apples = 10
+          print(apples)
+        `),
+        html(`
+          Easy as that!<br/>
+          What we've done here is basically take the number 10
+          and name it "apples." Every line below that one can now
+          use that variable instead of the literal number.<br/>
+          More importantly, we can now use that variable as a blank space
+          where we can put anything we want.
+          This means we can write a program to do something,
+          and feed it whatever number we want without rewriting the whole thing
+          by hand.<br/>
+          Let's say, for example, that you want to avoid some geometry homework.
+          The assignment wants you to calculate the area of a bunch of circles.
+          If you do that by hand, it'll make you put in a whole bunch of numbers
+          just to do the same thing over and over again.
+          Instead, let's teach the computer how to do it with a simple program:
+        `),
+        codeblock(`
+          radius = 10
+          pi = 3.141592
+          area = pi * radius * radius
+          print(area)
+        `),
+        html(`
+          Now calculating the area of a different circle is as easy as changing
+          the number assigned to the "radius" variable.<br/>
+          When the computer runs this program, it will step through one line at a time,
+          performing whatever action that line tells it to, from top to bottom.
+          For this program, the computer will perform the following steps in order:
+        `),
+        list(
+          `Store the value "10" in the variable "radius."`,
+          `Store the value "3.141592" in the variable "pi."`,
+          div(`Calculate the result of`, code("3.141592 * 10 * 10"), `and store the result in the variable "area."`),
+          `Print the value of the variable "area" to the console for the user to read.`
+        )
       ),
       section("tutorial05", "100: Python ssStrings",
-
+        html(`
+          It's time to connect these new capabilities with the very first
+          tutorial exercise. In Python, there's no rule restricting expressions
+          to numbers. A variable can be just about anything, including text:
+        `),
+        codeblock(`
+          text = "Hello, world!"
+          print(text)
+        `),
+        html(`
+          This is what we call a "string," because it is a string of
+          characters in order.
+        `)
       ),
     ),
     section("tutorial1", "Level 1",
@@ -287,6 +359,17 @@ const data = [
           - Increase/decrease player size (game.player.r)
           - Change player skin (todo)
           - Momentum (enable verlet mode) (game.player.verlet = True)
+      `),
+      html(`
+        The SproutCore engine provides a wide variety of variables to play with.
+        To keep them organized, many of these variables are nested into
+        groups, which are themselves named variables.
+        In Python, we use dot notation to access such nested variables.
+        Generally that takes the form of <code>container.thing</code>.
+        Since this can be used on any kind of container, you can even
+        chain these to access more and more specific pieces of data.<br/>
+        It'll make more sense as you get used to it, for now you can
+        just think of some variables having dots in their name.
       `),
       code(`game.player.speed = 999`), br(),
       "Other player variables to play with include:",
@@ -311,6 +394,14 @@ const data = [
         - Infinite ammo
         - Hacked score
       `),
+      html(`
+        Sometimes, data in a game can be nested very deeply.<br/>
+        <code>game.player.primaryWeapon.ammo = -1</code><br/>
+        In these cases, it can be beneficial to use variables
+        to store parts along the way that you'll be using often.<br/>
+        It will help you keep your code clean, and make it easier
+        to expand on later as you develop your program.
+      `),
       codeblock(`
         weapon = game.player.primaryWeapon
         weapon.ammo = -1
@@ -319,22 +410,242 @@ const data = [
       `)
     ),
     section("tutorial3", "Level 3",
+      html(`
+        So far, our programs have only run one line at a time in the
+        exact same order they appear on screen.
+        For more complex programs, however, we will obviously
+        want to go back and run previous lines again.
+        For that purpose, Python includes "loops."<br/>
+        Loops are blocks of code which run normally until
+        the computer reaches the end, at which point it will
+        return to the beginning of that block.<br/>
+        Since we rarely want code to repeat forever,
+        the most basic form of loop in Python checks a condition
+        before it starts executing the block. This is a structure
+        known as a "while" loop, because it repeats the code
+        inside <b>while</b> the condition is <code>True</code>.
+        Have a look:
+      `),
       codeblock(`
-        DEV NOTE - OUTLINE:
-        Characterized by flow control and simple algorithms
-        - While loop intro - replicate a for loop
-        - For loop intro - an easier way to do what we did before
-        - Geometry printing (triangle, square, checkerboard)
+        i = 0
+        while i < 10:
+          print(i)
+          i = i + 1
+      `),
+      html(`
+        If you run this code, you'll see that it prints out the numbers
+        from 0 to 9 in the console.
+        While loops can use any expression that produces a
+        Boolean (True or False) value.
+        In fact, at the very heart of this engine, a while loop
+        controls the entire process of updating the game each frame.<br/>
+        Loops like this aren't just a way to avoid excessive copying, though.
+        They allow the computer to respond appropriately to any length
+        of input data.<br/>
+        Loops can even run inside other loops.
+        For example, if you wanted to run some function on every
+        block in a voxel world, you might use something like this:
+      `),
+      codeblock(`
+        worldSizeX = 2
+        worldSizeY = 2
+        worldSizeZ = 2
+        z = 0
+        while z < worldSizeZ:
+          y = 0
+          while y < worldSizeY:
+            x = 0
+            while x < worldSizeX:
+              print("Updating block:", x, y, z)
+              x = x + 1
+            y = y + 1
+          z = z + 1
+      `),
+      html(`
+        As you can see, this gets unwieldy pretty fast.
+        Luckily, loops like this are so common that Python
+        includes a shortcut to do exactly the same thing.
+        This is called a "for" loop, and it looks like this:
+      `),
+      codeblock(`
+        for i in range(0, 10):
+          print(i)
+      `),
+      html(`
+        This is a lot quicker to write, and a lot easier to read.
+        With this new tool, our world update code might look
+        like this:
+      `),
+      codeblock(`
+        worldSizeX = 2
+        worldSizeY = 2
+        worldSizeZ = 2
+        for z in range(0, worldSizeZ):
+          for y in range(0, worldSizeY):
+            for x in range(0, worldSizeX):
+              print("Updating block:", x, y, z)
+      `),
+      html(`
+        That's a <i>lot</i> easier to work with, isn't it?
+        For loops are everywhere in programming, so it's important
+        to play around with them until you understand them
+        very well.<br/>
+        Once you think you've got the hang of them, try
+        some of these exercises.<br/>
+        We'll start by drawing some shapes in the console.
+        The same process is used at a much larger scale
+        to display everything you see on screen.
+        Without looking at the answer, try to come up with
+        a solution to the puzzle on your own.<br/><br/>
+
+        The most basic - and most important - shape we can
+        draw is the simple square.
+        Try writing a program which prints a square of <code>#</code>,
+        5 characters wide and 5 characters tall.
+      `),
+      subsection("Solution",
+        codeblock(`
+          # The intended solution
+          for i in range(0, 5):
+            print("#" * 5)
+        `),
+        codeblock(`
+          # Another possible solution
+          print("#####")
+          print("#####")
+          print("#####")
+          print("#####")
+          print("#####")
+        `),
+        html(`
+          Of course, the second solution here
+          only works if this is the only square you want to ever display.
+          While it technically works and may seem at first
+          the simplest solution, it can end up being even more work in the end.
+          The first solution is more compact and adaptable,
+          saving you effort in the long run.
+        `),
+        codeblock(`
+          # An example to demonstrate how the width and height can change.
+          width = 10
+          height = 10
+          for i in range(0, height):
+            print("#" * width)
+        `)
+      ),
+      html(`
+        Another important shape we might want to draw is the triangle.
+        See if you can write a program to print a triangle like this,
+        but 10 characters wide and 10 characters tall:
+      `),
+      codeblock(`
+        #
+        ##
+        ###
+        ####
+        #####
+      `),
+      subsection("Solution",
+        codeblock(`
+          # The intended solution
+          for i in range(0, 10):
+            print("#" * i)
+        `),
+        codeblock(`
+          # A poor solution
+          for i in range(0, 10):
+            if i == 0:
+              print("#")
+            elif i == 1:
+              print("##")
+            elif i == 2:
+              print("###")
+            # ... etc
+        `),
+        html(`
+          The second solution here is an example of code which
+          makes the programmer work hard instead of making use of the
+          computer's capabilities.
+          In general, solutions like this are a compromise
+          when a far simpler and more elegant solution exists
+          that the programmer failed to think of.
+        `)
+      ),
+      html(`
+        A useful trick to know which often shows up in
+        loops like this is how to perform something on
+        even values only:
+      `),
+      codeblock(`
+        for i in range(0, 10):
+          if i % 2 == 0:
+            print(i)
+      `),
+      html(`
+        This operator - % - can be used to check if the left
+        hand side is divisible by the right hand side.
+        If it is, the result is zero.
       `)
     ),
-    section("tutorial3", "Level 3",
+    section("tutorial4", "Level 4",
+      // codeblock(`
+      //   DEV NOTE - OUTLINE:
+      //   Characterized by game interactivity and callbacks
+      //   - First function
+      //   - Console input (todo)
+      //   - Custom "hello world" menu button
+      //   - Speeeeen! (player rotation)
+      // `),
+      html(`
+        Often, program flow needs more advanced control than simple
+        loops can provide, or just need to do the same thing many
+        times in many places. Instead of writing the same code over and over,
+        Python allows you to save chunks of code to use later.<br/>
+        This is called a "function," and it looks like this:
+      `),
       codeblock(`
-        DEV NOTE - OUTLINE:
-        Characterized by game interactivity and callbacks
-        - First function
-        - Console input (todo)
-        - Custom "hello world" menu button
-        - Speeeeen! (player rotation)
+        def hello():
+          print("Hello, world!")
+      `),
+      html(`
+        Now that we've created our function, we can reuse it anywhere
+        further down the program.
+        To do that, you "call" the function like this:
+      `),
+      codeblock(`
+        hello()
+      `),
+      html(`
+        In the parentheses, we can add variables which can be set
+        each time you use the function. These are called "arguments."
+      `),
+      codeblock(`
+        def sparkle(text):
+          print("*Xx" + text + "xX*")
+        sparkle("Alan")
+      `),
+      html(`
+        Arguments allow us to send information into the function,
+        but what if we need to get information out?
+        For this, we use the return statement.
+      `),
+      codeblock(`
+        def sparkle(text):
+          return "*Xx" + text + "xX*"
+        print("Hello, " + sparkle("Turing"))
+      `),
+      codeblock(`
+        def isEven(num):
+          return num % 2 == 0
+        def isOdd(num):
+          return !isEven(num)
+      `),
+      codeblock(`
+        def factorial(num):
+          if num > 2:
+            return num * factorial(num - 1)
+          else:
+            return 1
       `),
       codeblock(`
         # Custom menu button
@@ -348,32 +659,32 @@ const data = [
           game.player.angle = game.player.angle + 100 * dt
       `)
     ),
-    section("tutorial4", "Level 4",
-      codeblock(`
-        DEV NOTE - OUTLINE:
-        Characterized by dynamic access and minor static alterations
-        - Statically weaken enemies
-        - Create a unique player weapon
-      `)
-    ),
-    section("tutorial5", "Level 5",
-      codeblock(`
-        DEV NOTE - OUTLINE:
-        Characterized by class structures and behavioral alterations
-        - Custom entity (singleton)
-        - Spawner api
-        - Helicopter enemy aiming
-        - Hacky entity-based ui
-      `)
-    ),
-    section("tutorialwow", "Level ???",
-      codeblock(`
-        DEV NOTE - OUTLINE:
-        elite
-         - Reconstruction of base game
-         - Flappy Jet
-      `)
-    )
+    // section("tutorial5", "Level 5",
+    //   codeblock(`
+    //     DEV NOTE - OUTLINE:
+    //     Characterized by dynamic access and minor static alterations
+    //     - Statically weaken enemies
+    //     - Create a unique player weapon
+    //   `)
+    // ),
+    // section("tutorial6", "Level 6",
+    //   codeblock(`
+    //     DEV NOTE - OUTLINE:
+    //     Characterized by class structures and behavioral alterations
+    //     - Custom entity (singleton)
+    //     - Spawner api
+    //     - Helicopter enemy aiming
+    //     - Hacky entity-based ui
+    //   `)
+    // ),
+    // section("tutorialwow", "Level ???",
+    //   codeblock(`
+    //     DEV NOTE - OUTLINE:
+    //     elite
+    //      - Reconstruction of base game
+    //      - Flappy Jet
+    //   `)
+    // )
   ),
   section(
     "api", "API",
@@ -382,14 +693,14 @@ const data = [
         text("Accessed as:", code("game.asset")),
         section("apiimageasset", "ImageAsset",
           text("Accessed as:", code("game.asset.ImageAsset")),
-          section("apiImageAssetMembers", "Instance Members",
+          section("apiimageassetmembers", "Instance Members",
             table(
-              member("src", "string", "the url of the source image to load"),
+              member("src", "string", "the url of the source image to load, can also be a path to default assets."),
               member("width", "number", "(read-only) width of the image in pixels"),
               member("height", "number", "(read-only) height of the image in pixels")
             )
           ),
-          section("apiImageAssetFunctions", "Static Methods",
+          section("apiimageassetfunctions", "Static Methods",
             methodoc("getImage", "game.asset.ImageAsset",
               "game.asset.ImageAsset.getImage(path, abs)",
               [
@@ -414,6 +725,68 @@ const data = [
                 Generally, you should prefer getImage() for this purpose.
               `
             ),
+          )
+        ),
+        section("apianimimageasset", "AnimImageAsset",
+          text("Accessed as:", code("game.asset.AnimImageAsset")),
+          section("apianimimageassetmembers",
+            table(
+              member("src", "string", "the url of the source image to load"),
+              member("width", "number", "(read-only) width of the widest frame in pixels"),
+              member("height", "number", "(read-only) height of the tallest frame in pixels"),
+              member("duration", "number", "(read-only) length of the animation in seconds"),
+              member("frameRate", "number", "number of frames to display per second. Defaults to 30fps."),
+              member("animStyle", "string", text("animation behavior type. Can be any of: ", code("loop"), ", ", code("single"), ", ", code("dynamic"))),
+              member("frames", "array of game.geo.Rectangle", text("Rectangular sections of the original image to display for each frame of animation."))
+            )
+          ),
+          section("apianimimageassetmethods",
+            methodoc("onLoad", "void", "instance.onLoad()", [],
+              text("This method is called when the image finishes loading and is ready to be sliced.")
+            ),
+            methodoc("addFrame", "game.geo.Rectangle", "instance.addFrame(x, y, w, h)",
+              [
+                argument("x", "number", "top left x position"),
+                argument("y", "number", "top left y position"),
+                argument("w", "number", "width"),
+                argument("h", "number", "height")
+              ],
+              text("Adds a frame division as the last frame")
+            ),
+            methodoc("clear", "void", "instance.clear()", [], 
+              text("Clears all frame divisions from the list.")
+            ),
+            methodoc("slice", "void", "instance.slice(x, y, w, h, dx, dy)",
+              [
+                argument("x", "number", "top left x position of first frame"),
+                argument("y", "number", "top left y position of first frame"),
+                argument("w", "number", "width of each frame"),
+                argument("h", "number", "height of each frame"),
+                argument("dx", "number", "empty horizontal space between frames"),
+                argument("dy", "number", "empty vertical space between frames")
+              ],
+              text("Automatically generates a grid of frame divisions for the image.")
+            ),
+            methodoc("autoSlice", "void", "instance.autoSlice(x, y, hSlices, vSlices, dx, dy)",
+              [
+                argument("x", "number", "top left x position of first frame"),
+                argument("y", "number", "top left y position of first frame"),
+                argument("hSlices", "number", "Number of slices to generate columns of grid"),
+                argument("vSlices", "number", "Number of slices to generate rows of grid"),
+                argument("dx", "number", "empty horizontal space between frames"),
+                argument("dy", "number", "empty vertical space between frames")
+              ],
+              text("Utility method for automatically slicing an image into a certain number of frames vertically and horizontally, automatically calculating frame dimensions.")
+            ),
+            methodoc("frameAt", "game.geo.Rectangle", "instance.frameAt(clock)", [
+              argument("clock", "number", "Time to calculate frame at")
+            ], text("Returns the frame that should be displayed at the given time.")),
+            methodoc("draw", "void", "instance.draw(canvas, clock)", [
+                argument("canvas", "CanvasRenderingContext2D", "Target canvas for rendering"),
+                argument("clock", "number", "Current time of animation to render")
+              ],
+              text("Renders the appropriate frame for the supplied type at (0,0). To render in other locations, push a canvas transform first.")
+            )
           )
         )
       ),
@@ -676,7 +1049,67 @@ const data = [
             In some engines - such as Unity - the states are referred to as "stages."
             However, the principle is the same.
             Each state is a separate environment with its own collection of objects, like a level in an arcade game.
+          `),
+        section("apistatemembers", "Instance Members",
+          table(
+            member("name", "string", "Name of the gamestate. Used to identify it as a target for switching."),
+            member("initialized", "boolean", "Becomes True as soon as the gamestate is loaded for the first time."),
+            member("ui", "HTMLElement", "An HTML element loaded into the game's ui space for displaying information or containing buttons. These will always be displayed over game content.")
+          )
+        ),
+        section("apistatemethods", "Instance Methods",
+          methodoc("load", "void", "instance.load()", [], 
+            `Called once the first time the game state is entered.`
+          ),
+          methodoc("enter", "void", "instance.enter()", [],
+            `Called before the first update when the state becomes active.`
+          ),
+          methodoc("exit", "void", "instance.exit(nextState = None)", [
+            argument("nextState", "string?", "The name of the new state the game is switching to.")
+          ], `
+            Called as the state is deactivating, before the next state activates.
+          `),
+          methodoc("update", "void", "instance.update(dt)", [
+            argument("dt", "number", "Time in seconds since the last update call.")
+          ], `
+            Called every frame before rendering. Handles moment-to-moment game logic.
+          `),
+          methodoc("draw", "void", "instance.draw()", [],
+            `Called every frame to render the current game state.`
+          ),
+          methodoc("keydown", "void", "instance.keydown(key)", [
+            argument("key", "string", "Javascript ID of the new key being pressed.")
+          ], `
+            Called when a key is pressed down. Will not interrupt update or draw calls.
+          `),
+          methodoc("keyup", "void", "instance.keyup(key)", [
+            argument("key", "string", "Javascript ID of the key being released.")
+          ], `
+            Called when a key is released. Will not interrupt update or draw calls.
+          `),
+          methodoc("mousedown", "void", "instance.mousedown(b, x, y)", [
+            argument("b", "string", "Javascript ID of the mouse button being pressed."),
+            argument("x", "number", "x position of the cursor when the button was pressed."),
+            argument("y", "number", "y position of the cursor when the button was pressed.")
+          ], `
+            Called when the mouse is clicked. Will not interrupt update or draw calls.
+          `),
+          methodoc("mouseup", "void", "instance.mouseup(b, x, y)", [
+            argument("b", "string", "Javascript ID of the mouse button being released."),
+            argument("x", "number", "x position of the cursor when the button was released."),
+            argument("y", "number", "y position of the cursor when the button was released.")
+          ], `
+            Called when a button on the mouse is released. Will not interrupt update or draw calls.
+          `),
+          methodoc("scroll", "void", "instance.scroll(x, y, dx, dy)", [
+            argument("x", "number", "x position of the cursor when the mouse wheel was scrolled."),
+            argument("y", "number", "y position of the cursor when the mouse wheel was scrolled."),
+            argument("dx", "number", "How far the mouse wheel was scrolled horizontally. This is usually 0 except on touch pads."),
+            argument("dy", "number", "How far the mouse wheel was scrolled down.")
+          ], `
+            Called repeatedly as the mouse wheel is scrolled.
           `)
+        )
       ),
       section("apigeo", "Geometry",
         text("Accessed as:", code("game.geo")),
@@ -1260,7 +1693,65 @@ const data = [
       ),
       section("apigraphics", "Graphics",
         text("Accessed as:", code("game.graphics")),
-        "Not yet implemented. Will provide utilities for drawing shapes and sprites. For the moment, use entities."
+        html(`Provides lower level support for direct rendering operation. For most purposes, graphics are best handled through entities.`),
+        section("apigraphicsfunctions", "Functions",
+          methodoc("draw", "void", "game.graphics.draw(img, x, y, sx, sy, r, cx, cy, clock)", [
+
+          ], `
+            Transforms and renders an image to the canvas similar to many other 2d game engines.
+          `),
+          methodoc("drawCentered", "void", "game.graphics.drawCentered(img, x, y, sx, sy, r, cx, cy, clock)", [
+
+          ], `
+            Transforms and renders an image to the canvas centered at the provided coordinates.
+          `),
+          methodoc("drawRect", "void", "game.graphics.drawRect(img, x, y, w, h, r, cx, cy, clock)", [
+
+          ], `
+            Renders an image to the canvas fitted to the provided rectangle. (before rotation)
+          `),
+          methodoc("transformRaw", "void", "game.graphics.transformRaw(scaleX = 1, skewVert = 0, skewHoriz = 0, scaleY = 1, dx = 0, dy = 0)", [
+
+          ], `
+            Passthrough for canvasContext2D.transform(...).
+            Parameters correspond exactly to the first 6 entries in the
+            3x3 transform matrix, and are named roughly in correspondence to
+            what role that entry performs if modified in isolation.
+          `),
+          methodoc("transform", "void", "game.graphics.transform(dx, dy, sx, sy, r, cx, cy)", [
+
+          ], `
+            Applies a common image drawing transform of rotation, position, and scale.
+          `),
+          methodoc("debugRect", "void", "game.graphics.debugRect(x, y, w, h)", [
+
+          ], `
+            Renders an unfilled red rectangle for debugging purposes.
+          `),
+          methodoc("debugCRect", "void", "game.graphics.debugCRect(x, y, w, h)", [
+
+          ], `
+            Renders an unfilled red rectangle centered on the provided coordinates.
+          `),
+          methodoc("debugCircle", "void", "game.graphics.debugCircle(x, y, r)", [
+
+          ], `
+            Renders an unfilled red circle centered on the provided coordinates for debugging purposes.
+          `),
+          methodoc("debugLine", "void", "game.graphics.debugLine(x1, y1, x2, y2", [
+
+          ], `
+            Renders a red line segment between the provided coordinates for debugging purposes.
+          `),
+          methodoc("debugDot", "void", "game.graphics.debugDot(x, y)", [
+
+          ], `
+            Renders a small red circle at the provided coordinates for debugging purposes.
+          `)
+        ),
+        section("apigraphicsmembers", "Members",
+          member("c", "CanvasRenderingContext2D", "The target canvas of the game.")
+        )
       ),
       section("apiutil", "Utilities",
         text("Accessed as:", code("game.util")),
@@ -1317,6 +1808,7 @@ const data = [
         ),
 
         section("apiauto", "AutoUpdateUtil",
+          html(`Be warned that these utilities are prone to errors due to memory management mismatches between Javascript and Pyodide.`),
           section("apismooth", "SmoothUtil",
             "Todo"
           ),
@@ -1332,7 +1824,75 @@ const data = [
         )
       ),
       section("apiworld", "Game World",
-        "Todo"
+        text("Current world instance accessed as:", code("game.world")),
+        section("apiworldmethods", "Instance Methods",
+          methodoc("testIntersection", "boolean", "instance.testIntersection(testEnt, condition)", [
+            argument("testEnt", "game.Entity", "Entity to test collisions for."),
+            argument("condition", "function(ent): boolean", "An optional check which the entity must also pass for the function to return True.")
+          ], html(`
+            Tests all other entities and bullets in the world for intersection
+            with the provided test entity.<br />
+            Returns True if one intersects, unless a condition function is provided.
+            In that case, returns true if an entity intersects for which that function also returns True.
+          `)),
+          methodoc("update", "void", "instance.update(dt)", [
+            argument("dt", "number", "Time in seconds since the last update call.")
+          ], `
+            Updates the world and all entities in it. Intended to be called once every frame before rendering.
+          `),
+          methodoc("draw", "void", "instance.draw()", [], `
+            Renders all entities and bullets in the world.
+          `),
+          methodoc("addEntity", "void", "instance.addEntity(ent)", [
+            argument("ent", "game.Entity", "New entity to add to the game world.")
+          ], `
+            If the entity is not already present in the world, adds it to the world before the next update tick.
+          `),
+          methodoc("addBullet", "void", "instance.addBullet(bul)", [
+            argument("bul", "game.Entity", "New bullet to add to the game world.")
+          ], `
+            If a bullet is not already present in the world, adds it as a bullet before the next update tick.
+          `),
+          methodoc("clear", "void", "instance.clear()", [], `
+            Attempts to finalize and delete all entities and bullets.
+            Warning: in order to ensure success, this will not perform callbacks other than finalize.
+          `),
+          methodoc("keydown", "void", "instance.keydown(k)", [
+            argument("k", "string", "Javascript ID of the key being pressed.")
+          ], `
+            Calls keydown callbacks on all entities and bullets in the world.
+          `),
+          methodoc("keyup", "void", "instance.keyup(k)", [
+            argument("k", "string", "Javascript ID of the key being released.")
+          ], `
+            Calls keyup callbacks on all entities and bullets in the world.
+          `),
+          methodoc("mousedown", "void", "instance.mousedown(b, x, y)", [
+            argument("b", "string", "Javascript ID of the button being pressed."),
+            argument("x", "number", "x coordinate of the cursor when the mouse button was pressed."),
+            argument("y", "number", "y coordinate of the cursor when the mouse button was pressed.")
+          ], `
+            Calls mousedown callbacks on all entities and bullets in the world.
+          `),
+          methodoc("mouseup", "void", "instance.mouseup(b, x, y)", [
+            argument("b", "string", "Javascript ID of the button being released."),
+            argument("x", "number", "x coordinate of the cursor when the mouse button was released."),
+            argument("y", "number", "y coordinate of the cursor when the mouse button was released.")
+          ], `
+            Calls mouseup callbacks on all entities and bullets in the world.
+          `),
+          methodoc("scroll", "void", "instance.scroll(x, y, dx, dy)", [
+            argument("x", "number", "x coordinate of the cursor when the mouse wheel was scrolled."),
+            argument("y", "number", "y coordinate of the cursor when the mouse wheel was scrolled."),
+            argument("dx", "number", "horizontal distance the mouse wheel was scrolled."),
+            argument("dy", "number", "distance the mouse wheel was scrolled down.")
+          ], `
+            Calls scroll callbacks on all entities and bullets in the world.
+          `)
+        ),
+        section("apiworldmembers", "Instance Members",
+
+        )
       )
     )
   ),
@@ -1359,6 +1919,10 @@ const data = [
         <a href="https://pyodide.org/en/stable/">Pyodide Website</a>:
         An advanced reference for the specific Python environment
         used in this project. Mostly only necessary for esoteric nonsense.
+      `),
+      html(`
+        <a href="https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values">Mozilla Developer Network</a>:
+        A reference table for the ids of keys in keydown/keyup events.
       `)
     )
   )
