@@ -96,14 +96,20 @@ body {
 #tab-cons {
   display: flex;
   flex-direction: column;
+}
+.console-container {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
   background-color: #272822;
 }
-#console-container {
+.console-bound {
   display: block;
   overflow: scroll;
   flex-grow: 1;
 }
-#console {
+.console {
   width: 100%;
   color: white;
   border-collapse: collapse;
@@ -111,6 +117,15 @@ body {
   font-family: 'Courier New', Courier, monospace;
   text-wrap: stable;
   display: table;
+}
+.console-input {
+  width: 100%;
+  box-shadow: inset 0px 4px 4px black;
+  color: white;
+  font-size: 14pt;
+  font-family: 'Courier New', Courier, monospace;
+  height: 24pt;
+  bottom: 0;
 }
 
 .console-entry {
@@ -233,4 +248,11 @@ details>details>details summary {
 
 *:visited {
   color: white;
+}
+
+/* Accursed temporary things */
+
+#tab-game {
+  display: flex;
+  flex-direction: row;
 }

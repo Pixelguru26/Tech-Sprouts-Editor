@@ -50,14 +50,18 @@ export class ConsoleEntry {
 }
 
 export class ConsoleManager {
-  constructor(console) {
-    this.console = console;
+  constructor(container, consoleElement, inputElement) {
+    this.container = container;
+    this.consoleElement = consoleElement;
+    this.inputElement = inputElement;
+    this.inputEventListeners = [];
+    this.printEventListeners = [];
     this.que = [];
     this.queValues = [];
     this.queLength = 1;
   }
 
-  print(str) {
+  print(str, multiline = true) {
     // Search for duplicate messages; these will be consolidated
     let i = -1;
     for (let j = 0; j < this.que.length; j++) {
@@ -72,16 +76,21 @@ export class ConsoleManager {
       ret.setCurrent();
       ret.count = ret.count + 1;
     } else {
-      // Append new log item
-      let ret = new ConsoleEntry(
-        this.console.childElementCount.toString(),
-        (new Date()).toLocaleTimeString(),
-        str
-      );
-      this.que.push(str);
-      this.queValues.push(ret);
-      this.console.append(ret.element);
-      console.log(str);
+      if (multiline) {
+        for (let line of str.split("\n")) {
+          this.print(line, false);
+        }
+      } else {
+        // Append new log item
+        let ret = new ConsoleEntry(
+          this.consoleElement.childElementCount.toString(),
+          (new Date()).toLocaleTimeString(),
+          str
+        );
+        this.que.push(str);
+        this.queValues.push(ret);
+        this.consoleElement.append(ret.element);
+      }
     }
 
     while (this.que.length > this.queLength) {
@@ -90,21 +99,92 @@ export class ConsoleManager {
       this.queValues.shift();
     }
   }
+
+  addInputEventListener(listener) {
+    if (!this.inputEventListeners.includes(listener)) {
+      this.inputEventListeners.push(listener);
+    }
+  }
+
+  removeInputEventListener(listener) {
+    let i = this.inputEventListeners.indexOf(listener);
+    if (i != -1) {
+      this.inputEventListeners.splice(i, 1);
+    }
+  }
+
+  clearInputEventListeners() {
+    this.inputEventListeners.length = 0;
+  }
+
+  addPrintEventListener(listener) {
+    if (!this.printEventListeners.includes(listener)) {
+      this.printEventListeners.push(listener);
+    }
+  }
+  
+  removePrintEventListener(listener) {
+    let i = this.printEventListeners.indexOf(listener);
+    if (i != -1) {
+      this.inputEventListeners.splice(i, 1);
+    }
+  }
+
+  clearPrintEventListeners() {
+    this.printEventListeners.length = 0;
+  }
+
+  input(str) {
+    this.print(str);
+
+    let evt;
+    for (let i = 0; i < this.inputEventListeners.length; i++) {
+      evt = new CustomEvent("consoleInput", { detail: {value: str}, target: this });
+      this.inputEventListeners[i](evt);
+    }
+  }
+
+  clear() {
+    this.consoleElement.replaceChildren();
+  }
 }
 
-export default () => {
-  let tab = document.getElementById("tab-cons");
+export default (target) => {
+  target ??= document.getElementById("tab-cons");
+  let ret;
 
   let container = JSLib.build([
     "div", {
-      id: "console-container"
-    }
-  ], tab);
-  let console = JSLib.build([
+      class: "console-container"
+    }, [
+      [ "div", { class: "console-bound" }]
+    ]
+  ], target);
+  let consoleElement = JSLib.build([
     "table", {
-      id: "console"
+      class: "console"
+    }
+  ], container.firstChild);
+  let input;
+  /**
+   * @param {KeyboardEvent} event 
+   */
+  let inputfunc = function (event) {
+    if (event.key.toLowerCase() == "enter" && !event.shiftKey) {
+      event.preventDefault();
+      let tmp = input.textContent;
+      input.textContent = "";
+      ret.input(tmp);
+    }
+  }
+  input = JSLib.build([
+    "div", {
+      class: "console-input",
+      contenteditable: true,
+      onkeydown: inputfunc
     }
   ], container);
 
-  return new ConsoleManager(console);
+  ret = new ConsoleManager(container, consoleElement, input);
+  return ret;
 }

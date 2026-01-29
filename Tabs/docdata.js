@@ -155,14 +155,6 @@ const data = [
   section(
     "tutorial", "Tutorials",
     section("tutorial0", "Introduction",
-      codeblock(`
-        DEV NOTE - OUTLINE:
-        - Ensure system is in working order ("Setup")
-        - Hello world ("Hello World")
-        - Print expression ("Fancy Calculator")
-        - Assign variable ("Memories")
-        - Strings & concatenation ("Python ssStrings")
-      `),
       section("tutorial01", "000: Setup",
         html(`
           Welcome to the SproutCore Python development environment!<br>
@@ -347,6 +339,53 @@ const data = [
           characters in order.
         `)
       ),
+      section("tutorial06", "101: Misc",
+        html(`
+          To run the base game, write the following code at the top of
+          the editor:
+        `),
+        codeblock(`
+          from pylib.games.shooter import game
+        `),
+        html(`
+          The console has an input at the very bottom. <br/>
+          To clear the console while code is running, type the
+          following command into the input and press enter:
+        `),
+        codeblock(`
+          cls
+        `),
+        html(`
+          To use console inputs in your code, you must define
+          a function to run whenever something is entered.
+          SproutCore looks for a function in the game object
+          and in the global user code environment called "input".
+          Here is a simple demonstration:
+        `),
+        codeblock(`
+          def input(value):
+            print("Received command", value)
+        `),
+        html(`
+          By default, SproutCore's asset system searches
+          its built-in content directory whenever an image
+          is requested. However, since it uses the browser
+          to retrieve image data, it is capable of
+          retrieving linked images from almost anywhere on
+          the web. To make use of this, simply retrieve
+          images with the "absolute" tag enabled by passing
+          True as the third argument. 
+          `),
+        codeblock(`
+          game.player.sprite = game.Asset.ImageAsset.getImage("https://upload.wikimedia.org/wikipedia/commons/2/22/Earth_Western_Hemisphere_transparent_background.png", "earth", True)
+        `),
+        html(`
+          Due to the unreliability of internet connections,
+          this may not work 100% of the time as websites
+          restrict access, servers go down, etc.
+          It usually isn't a bug in SproutCore itself.
+        `)
+      )
     ),
     section("tutorial1", "Level 1",
       codeblock(`

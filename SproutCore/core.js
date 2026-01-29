@@ -1,10 +1,13 @@
 import GameWorld from "./world.js";
 import Entity from "./entity.js";
 import Geo from "./geometry.js";
-import CorePy from "./sproutcore.py.js";
 import Asset from "./asset.js";
 import Graphics from "./graphics.js";
 import JSLib from "./../Tabs/lib.js";
+
+
+import Pylib from "./pylib/index.js";
+import PyShooter from "./pylib/games/shooter.py.js";
 
 const DEVMODE = false;
 
@@ -25,14 +28,14 @@ const SproutCoreClass = class SproutCore {
   /** @type {Graphics} */
   g = null;
 
-  constructor(constab) {
+  constructor() {
     // this.assets = new UAssetManager();
     this.pyInitialized = false;
     this.py = null;
     this.pyReceivers = [];
   }
-  async init(constab) {
-    this.constab = constab;
+  async init(consoleManager) {
+    this.consoleManager = consoleManager;
     if (this.running) {
       // In case this is a restart
       this.running = false;
@@ -69,11 +72,44 @@ const SproutCoreClass = class SproutCore {
     Entity.clearIDs();
 
     await this.initPy();
+
+    // Link console input
+    let sproutcore = this; // Because JS is too stupid to maintain context
+    this.consoleManager.addInputEventListener(function (evt) {
+      sproutcore.callback("input", evt.detail.value);
+    });
+
     this.thread = this.run();
   }
 
+  async restart() {
+    let reloadIcon = document.getElementById("game-reload");
+    reloadIcon.spinnerAnimation.play();
+    reloadIcon.classList.remove("fa-play");
+    reloadIcon.classList.add("fa-stop");
+    try {
+      this.consoleManager.clear();
+      await this.init(this.consoleManager);
+    } catch (e) {
+      console.error(e);
+    }
+    reloadIcon.spinnerAnimation.cancel();
+    reloadIcon.classList.remove("fa-stop");
+    reloadIcon.classList.add("fa-play");
+  }
+
+  /**
+   * @param {KeyboardEvent} evt 
+   */
   keydown(evt) {
-    if (!evt.repeat) this.callback("keydown", evt.key);
+    if (!evt.repeat) {
+      if (evt.key === 'p' && evt.ctrlKey) {
+        this.restart();
+        evt.preventDefault();
+      } else {
+        this.callback("keydown", evt.key);
+      }
+    }
   }
   keyup(evt) {
     if (!evt.repeat) this.callback("keyup", evt.key);
@@ -102,11 +138,6 @@ const SproutCoreClass = class SproutCore {
    * Should not be called externally
    */
   async initPy() {
-    // let restart = false;
-    // if (!this.py) {
-    //   // In case this is a restart
-    //   restart = true;
-    // }
     this.py = await loadPyodide();
     
     // Link console output
@@ -122,46 +153,29 @@ const SproutCoreClass = class SproutCore {
     this.py.registerJsModule("SproutCore", this);
     this.py.registerJsModule("JSLib", JSLib);
 
-    // Initialize python game object
-    // Write "file"
-    if (DEVMODE) {
-      // When in dev mode, assume fetch works appropriately.
-      // Allows use of local sproutcore.py without annoying extra steps.
-      let data = await fetch("./SproutCore/sproutcore.py");
-      this.py.FS.writeFile("/home/pyodide/sproutcore.py", await data.text());
-    } else {
-      this.py.FS.writeFile("/home/pyodide/sproutcore.py", CorePy);
+    // Import sproutcore pylib
+    this.py.FS.mkdir("/home/pyodide/pylib");
+    for (let key in Pylib) {
+      this.py.FS.writeFile(`/home/pyodide/pylib/${key}.py`, Pylib[key]);
     }
-    // Load to Python
-    let env = this.py.pyimport("sproutcore");
-    this.game = env["game"];
-
+    // Import games
+    this.py.FS.mkdir("/home/pyodide/pylib/games");
+    this.py.FS.writeFile("/home/pyodide/pylib/games/shooter.py", PyShooter);
+    // Dispatch pyodide loaded event
     this.pyReceivers.forEach((v) => v(this.py));
 
     // Load user code
     this.py.FS.writeFile(
       "/home/pyodide/main.py",
-      "from sproutcore import game\n" +
+      "from pylib.shared import game\n" +
+      "global game\n" + 
+      "from pylib.game import GameClass\n" +
+      "game = GameClass()\n" +
       (window.localStorage.getItem("./main.py") ?? "")
     );
     try {
-      // if (restart) {
-      //   let env = this.py.runPython(`
-      //     import sproutcore
-      //     import main
-      //     import importlib
-      //     global game
-      //     sproutcore.game = None
-      //     game = sproutcore.GameClass()
-      //     sproutcore.game = game
-      //     game.init()
-
-      //     importlib.reload(main)
-      //   `);
-      //   this.game = env["game"];
-      // } else {
-      // }
       this.userpy = this.py.pyimport("main");
+      this.game = this.userpy["game"];
     } catch (e) {
       this.error(e);
       this.running = false;
@@ -172,7 +186,7 @@ const SproutCoreClass = class SproutCore {
   callback(fn, ...args) {
     if (!this.running) return;
     try {
-      this.game[fn]?.(...args);
+      this.game?.[fn]?.(...args);
       return this.userpy?.[fn]?.(...args);
     } catch (e) {
       e = new Error(`Error while executing callback: ${fn}`, { cause: e });
@@ -182,35 +196,26 @@ const SproutCoreClass = class SproutCore {
 
   /**
    * Adds a timestamp and prints errors to the user-facing console.
-   * Includes special cases for pyodide errors and nesting.
    * @param {Error} err 
    */
   error(err) {
-    // Todo: add actual console
-    // let timeStamp = `${(new Date()).toLocaleTimeString()}`;
-    // let msg;
-    // if (err instanceof this.py._api.PythonError) {
-    //   msg = toString(err);
-    //   msg = `[${timeStamp}] Err: ${msg}${msg[msg.length - 1] == '\n' ? '' : '\n'}`;
-    // } else {
-    //   msg = err.message;
-    //   msg = `[${timeStamp}] Err: ${msg}${msg[msg.length - 1] == '\n' ? '' : '\n'}`;
-    // }
-    // console.error(msg);
-    console.error(err);
-    this.constab?.print?.(toString(err));
-    // debugger;
-    // for (let k in err) {
-    //   console.log(k, err[k]);
-    // }
-    // console.error(err.message);
-    // if (err.cause) {
-    //   console.log("Caused by:");
-    //   this.error(err.cause);
-    // } else if (err["cause"]) {
-    //   console.log("Caused by:");
-    //   this.error(err["cause"]);
-    // }
+    if (this.consoleManager?.print) {
+      if (err instanceof Error) {
+        this.consoleManager.print(err.message);
+        this.consoleManager.print(`Caused by: ${err.cause}`);
+        this.consoleManager.print(`Stacktrace:`);
+        if (err.stack) {
+          for (let line of err.stack.split(/\s/)) {
+            if (line != "") {
+              this.consoleManager.print(`\t> ${line}`);
+            }
+          }
+        }
+      } else {
+        // This handles Pyodide errors better
+        this.consoleManager.print(toString(err));
+      }
+    }
   }
 
   /**
@@ -231,12 +236,19 @@ const SproutCoreClass = class SproutCore {
         items[i] = items[i]?.toString?.() ?? "null";
       }
       let str = items.join(' ');
-      this.constab?.print?.(str);
+      this.consoleManager?.print?.(str);
       console.log(str);
     } catch (e) {
       e = new Error("Failed to print: non-serializable items encountered.", { cause: e });
       this.error(e);
     }
+  }
+
+  /**
+   * Clears the console
+   */
+  cls() {
+    this.consoleManager.clear();
   }
 
   /**
@@ -249,15 +261,17 @@ const SproutCoreClass = class SproutCore {
       let currentTime = Date.now();
       this.running = true;
       try {
-        this.game["state"] = null;
-        this.game["setState"]("menu");
+        if (this.game) {
+          this.game["state"] = null;
+          this.game?.["setState"]?.("menu");
+        }
       } catch (e) {
         e = new Error("Error while entering menu state", { cause: e });
         this.error(e);
         return;
       }
       try {
-        this.game["load"]();
+        this.game?.["load"]?.();
       } catch (e) {
         e = new Error("Error while loading game", {cause: e});
         this.error(e);
@@ -270,7 +284,7 @@ const SproutCoreClass = class SproutCore {
         currentTime = Date.now();
         // Update
         try {
-          this.game["update"](Math.max(1 / 60, (currentTime - lastTime) / 1000));
+          this.game?.["update"](Math.max(1 / 60, (currentTime - lastTime) / 1000));
           this.userpy?.["update"]?.(Math.max(1 / 60, (currentTime - lastTime) / 1000));
         } catch (e) {
           e = new Error("Error while updating", {cause: e});
@@ -284,7 +298,7 @@ const SproutCoreClass = class SproutCore {
           this.g.c.resetTransform();
           this.g.c.fillStyle = "black";
           this.g.c.fillRect(0, 0, this.g.c.canvas.width, this.g.c.canvas.height);
-          this.game["draw"]();
+          this.game?.["draw"]();
           this.userpy?.["draw"]?.();
         } catch (e) {
           e = new Error("Error while rendering frame", {cause: e});

@@ -17,6 +17,7 @@
     </script>
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./Tabs/filemgr.css" />
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
   </head>
   <body>
     <!-- <canvas id="gl-canvas" width="640" height="480"></canvas>
@@ -38,7 +39,7 @@
       <div class="tabcontent" id="tab-docs"></div>
 
       <!-- Game -->
-      <div class="tabcontent centercontainer" id="tab-game"></div>
+      <div class="tabcontent" id="tab-game"></div>
 
       <!-- Code -->
       <div class="tabcontent" id="tab-code"></div>
@@ -53,28 +54,20 @@
     <script type="module">
       import doctab from "./Tabs/docs.js";
       doctab();
-      import gametab from "./Tabs/game.js";
-      gametab();
-      import codetab from "./Tabs/code.js";
-      let editor = codetab();
       import constab from "./Tabs/console.js";
       let customConsole = constab();
+      import gametab from "./Tabs/game.js";
+      gametab(customConsole);
+      import codetab from "./Tabs/code.js";
+      let editor = codetab();
       import SproutCore from "./SproutCore/core.js";
       document.SproutCore = SproutCore;
       SproutCore.init(customConsole);
       import Test from "./Tabs/test.js";
-      // Test();
       let reloadIcon = document.getElementById("game-reload");
       reloadIcon.addEventListener("pointerup", async () => {
-        try {
-          await SproutCore.init(customConsole);
-        } catch (e) {
-          console.error(e);
-        }
-        reloadIcon.spinnerAnimation.pause();
+        SproutCore.restart();
       });
-    </script>
-    <script type="module">
       import TabManager from "./Tabs/mgr.js";
       import JSLib from "./SproutCore/jslib.js";
       // Tabs
@@ -87,6 +80,13 @@
           let success = tabs.hashChange(hash);
           if (!success && window.location.hash !== "#tab=test") {
             window.location.hash = "#tab=test";
+          }
+          // Godforsaken temporary solution to show console in both tabs.
+          // A better method will be implemented later.
+          if (tabs.currentTab === "game") {
+            document.getElementById("tab-game").appendChild(customConsole.container);
+          } else if (tabs.currentTab === "cons") {
+            document.getElementById("tab-cons").appendChild(customConsole.container);
           }
         }
         window.addEventListener("hashchange", hashChange);

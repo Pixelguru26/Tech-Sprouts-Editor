@@ -19,8 +19,10 @@ export default () => {
   });
 
   // Editor autosave system
+  // Saves every second if changes have been made.
   let editorTimeStamp = Date.now();
   let editorDirty = false;
+  // Create save thread
   let editorSaveLoop = (async () => {
     while (true) {
       if (editorDirty && Date.now() > (editorTimeStamp + 1000)) {
@@ -33,17 +35,19 @@ export default () => {
   })();
   // Store thread to return
   editor.autosaveThread = editorSaveLoop;
-
+  // Add event to mark editor for saving
   editor.addEventListener("change", (delta) => {
     editorDirty = true;
     editorTimeStamp = Date.now();
   });
 
+  // Load editor and save values
   let save = window.localStorage.getItem("./main.py");
   if (save && save !== "") {
     editor.setValue(save);
   } else {
-    // todo: default python
+    // Default python code
+    editor.setValue("# from pylib.games.shooter import game");
   }
 
   return editor;
