@@ -307,7 +307,7 @@ const SproutCoreClass = class SproutCore {
         }
 
         // Yield to browser/os. Required to avoid freezing.
-        await new Promise(r => setTimeout(r, 1));
+        await new Promise(r => setTimeout(r, (1000/60 - (currentTime - lastTime))));
       }
     } catch(e) {
       e = new Error("Error in core loop", {cause: e});

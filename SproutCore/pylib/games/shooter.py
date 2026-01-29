@@ -39,6 +39,8 @@ class ShooterGame(GameClass):
     this.player = ShooterGame.PlayerEntity()
 
   def update(this, dt):
+    this.bg0.update(dt)
+    this.bg1.update(dt)
     super().update(dt)
   
   def draw(this):
@@ -87,8 +89,8 @@ class ShooterGame(GameClass):
     dy = property(__get_dy__, __set_dy__, __nop__)
 
     def update(this, dt):
-      this.x += this.dx * dt
-      this.y += this.dy * dt
+      this.x += this.dx * this.sprite.width * dt
+      this.y += this.dy * this.sprite.height * dt
       this.age += dt
     
     def draw(this):
