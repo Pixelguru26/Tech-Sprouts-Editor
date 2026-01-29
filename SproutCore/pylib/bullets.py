@@ -71,7 +71,12 @@ class ExplosionEntity(Entity):
     this.lifetime = this.sprite.duration
     this.collision_type = "circle"
     # Extra trimming due to extra space in the sprite
-    this.body.r = this.sprite.width / 4
+    if this.sprite.width != None:
+      this.body.r = this.sprite.width / 4
+    else:
+      # For some reason this sprite doesn't always load.
+      # Need to look into that.
+      this.body.r = 64
     this.reg = dict()
     this.reg[this.unitid] = True
   
