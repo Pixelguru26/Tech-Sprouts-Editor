@@ -59,7 +59,7 @@ let Entity = class Entity {
     let sx = entity["scalex"];
     let sy = entity["scaley"];
     let a = entity["angle"];
-    switch (entity["collisionType"]) {
+    switch (entity["collision_type"]) {
       case "circle":
         if (entity["autoscale"]) {
           // Should scale to fit in bounding circle

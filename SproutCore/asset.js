@@ -44,10 +44,15 @@ class Asset {
     Asset.push(this);
   }
 
+  static extregexp = /\.[^\.\\\/]+$/;
   static getAsset (src) {
     if (src in this.reg) return this.reg[src];
-    let tmp = "./Assets/" + src;
-    if (tmp in this.reg) return this.reg[tmp];
+    let tmp0 = src.replace(Asset.extregexp, "");
+    if (tmp0 in this.reg) return this.reg[tmp0];
+    let tmp1 = "./Assets/" + src;
+    if (tmp1 in this.reg) return this.reg[tmp1];
+    let tmp2 = tmp1.replace(Asset.extregexp, "");
+    if (tmp2 in this.reg) return this.reg[tmp2];
     return null;
   }
 
@@ -121,8 +126,19 @@ Asset.ImageAsset = class ImageAsset extends Asset {
   get src() { return this.element.src; }
   set src(v) { this.element.src = v; }
 
-  static getImage(src) {
-    return Asset.getAsset(src) ?? new ImageAsset(src);
+  static getImage(src, name = null, abs = false) {
+    let ret;
+    if (name) {
+      ret = Asset.getAsset(name);
+      if (ret) return ret;
+      return new ImageAsset(src, name, abs);
+    } else {
+      ret = Asset.getAsset(src);
+      if (ret) return ret;
+      ret = Asset.getAsset(src.substring(src.lastIndexOf('/') + 1));
+      if (ret) return ret;
+      return new ImageAsset(src, name, abs);
+    }
   }
 
   get width() { return this.element.naturalWidth; }
