@@ -8,8 +8,9 @@ from pylib.autoutil import AutoUpdateUtil, RandTimerUtil, SmoothUtil
 from pylib.entity import Entity, LivingEntity
 from pylib.game import GameClass
 from pylib.state import GameState
-from pylib.shared import game
 from math import sin, cos, pi
+
+game = None
 
 class ShooterGame(GameClass):
   def __init__(this):
@@ -26,7 +27,6 @@ class ShooterGame(GameClass):
     return "bar"
   
   def init(this):
-    super().init()
     this.bg0 = ShooterGame.Background(SproutCore.Asset.getAsset("bg0"))
     this.bg1 = ShooterGame.Background(SproutCore.Asset.getAsset("bg1"))
     this.bg0.ax = 10
@@ -38,6 +38,7 @@ class ShooterGame(GameClass):
     this.bg1.sx = 0.4
     this.bg1.sy = 0.4
     this.player = ShooterGame.PlayerEntity()
+    super().init()
 
   def update(this, dt):
     this.bg0.update(dt)
@@ -45,10 +46,10 @@ class ShooterGame(GameClass):
     super().update(dt)
   
   def draw(this):
-    SproutCore.g.c.globalCompositeOperation = "lighter"
+    SproutCore.graphics.canvasContext.globalCompositeOperation = "lighter"
     this.bg0.draw()
     this.bg1.draw()
-    SproutCore.g.c.globalCompositeOperation = "source-over"
+    SproutCore.graphics.canvasContext.globalCompositeOperation = "source-over"
     super().draw()
 
   # Simple automatic scrolling background renderer
@@ -98,16 +99,16 @@ class ShooterGame(GameClass):
       alt = (this.y / (this.sprite.height * this.sy)) % 2 > 1
       x0 = (this.x % (this.sprite.width * this.sx)) - this.sprite.width * this.sx * 2
       y = (this.y % (this.sprite.height * this.sy)) - this.sprite.height * this.sy * 2
-      while y < SproutCore.g.c.canvas.height:
+      while y < SproutCore.graphics.height:
         y += this.sprite.height * this.sy
         x = x0
         if this.alternate:
           alt = not alt
           if alt:
             x = x0 + (this.sprite.width * this.sx) / 2
-        while x < SproutCore.g.c.canvas.width:
+        while x < SproutCore.graphics.width:
           x += this.sprite.width * this.sx
-          SproutCore.g.draw(this.sprite, x, y, this.sx, this.sy)
+          SproutCore.graphics.draw(this.sprite, x, y, this.sx, this.sy)
 
   class PlayerWeapon(EntityWeapon):
     def __init__(this, power=34, ammo=10, rate=10, auto=False, offsets=..., bullet=..., owner=None):
@@ -195,7 +196,6 @@ class ShooterGame(GameClass):
       this.weapons.append(weapon)
     
     def delete(this, reason = None):
-      this.reset()
       game.setState("dead")
     
     def finalize(this):
@@ -230,8 +230,7 @@ class ShooterGame(GameClass):
     
     def delete(this, reason = None):
       if reason == "health":
-        if game.player != None:
-          game.player.score += 10
+        game.player.score += 10
       return super().delete(reason)
   
   class ShootingEnemyEntity(BasicEnemyEntity):
@@ -292,9 +291,9 @@ class ShooterGame(GameClass):
       if this.autoscale:
         if this.collisionType == "circle":
           scale = (this.body.r * 2) / this.bladeSprite.width
-          SproutCore.g.drawCentered(this.bladeSprite, this.x, this.y, scale, scale, this.angle + this.age * 360)
+          SproutCore.graphics.drawCentered(this.bladeSprite, this.x, this.y, scale, scale, this.angle + this.age * 360)
       else:
-        SproutCore.g.drawCentered(this.bladeSprite, this.x, this.y, this.scalex, this.scaley, this.angle + this.age * 360)
+        SproutCore.graphics.drawCentered(this.bladeSprite, this.x, this.y, this.scalex, this.scaley, this.angle + this.age * 360)
 
   class StatePlay(GameState):
     def __init__(this):
@@ -400,7 +399,7 @@ class ShooterGame(GameClass):
             "button", {
               textContent: text,
               onclick: (evt) => {
-                core.callback("onButtonClick", evt.target, evt);
+                core.callPyEvent("onButtonClick", evt.target, evt);
                 fn?.(evt.target, evt);
               }
             }
@@ -418,9 +417,12 @@ class ShooterGame(GameClass):
       super().__init__()
       this.name = "dead"
     def load(this):
+      return super().load()
+    def enter(this):
       this.ui = pyodide.code.run_js(
         '''
-        (jsl, game) => {
+        (jsl, core) => {
+          console.log(core.game["player"]["score"]);
           return jsl.build([
             "div", {style: {
               width: "100%",
@@ -437,7 +439,7 @@ class ShooterGame(GameClass):
                   }
                 }],
                 ["div", {
-                  textContent: \`Score: \${game?.["player"]?.["score"] ?? 0}\`
+                  textContent: \`Score: \${core.game?.["player"]?.["score"] ?? 0}\`
                 }],
                 ["div", {
                   id: "game-dead-buttons",
@@ -454,7 +456,7 @@ class ShooterGame(GameClass):
             ]
           ]);
         }
-        ''')(JSLib, pyodide.ffi.create_proxy(game))
+        ''')(JSLib, SproutCore)
       this.buttonMenu = this.ui.querySelector("#game-dead-buttons")
       button = pyodide.code.run_js(
         '''
@@ -463,7 +465,7 @@ class ShooterGame(GameClass):
             "button", {
               textContent: "Menu",
               onclick: (evt) => {
-                core.callback("onButtonClick", evt.target, evt);
+                core.callPyEvent("onButtonClick", evt.target, evt);
                 game?.["setState"]("menu");
               }
             }
@@ -471,7 +473,10 @@ class ShooterGame(GameClass):
         }
       ''')(SproutCore, JSLib, pyodide.ffi.create_proxy(game))
       this.buttonMenu.append(button)
-      return super().load()
+      super().enter()
+    def exit(this, nextState):
+      game.player.reset()
+      super().exit(nextState)
 
 ShooterGame.PlayerEntity.weapon = ShooterGame.PlayerWeapon
 Entity.playerEntity = ShooterGame.PlayerEntity
@@ -501,5 +506,6 @@ def temp2(timer, time, lag):
 ShooterGame.HelicopterEnemyEntity.spawnTimer = RandTimerUtil(temp2, 0.5, 4)
 
 game = ShooterGame()
+SproutCore.game = game
 game.init()
 `;

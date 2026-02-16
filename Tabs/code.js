@@ -1,54 +1,82 @@
 import JSLib from "./lib.js";
 
-export default () => {
-  let tab = document.getElementById("tab-code");
+export default class Editor {
+  static lastid = 0;
+  #stopThread = null;
 
-  let editorElement = JSLib.build([
-    "div", {
-      id: "editor",
-      style: {
-        height: "100%"
-      }
-    }, []
-  ], tab);
+  constructor(path = null, defaultValue = "") {
+    this.defaultValue = defaultValue;
+    this.editorElement = JSLib.buildElement("div", {class: "editor-container"});
+    this.editor = ace.edit(this.editorElement, {
+      mode: "ace/mode/python",
+      theme: "ace/theme/monokai",
+      autoScrollEditorIntoView: true
+    });
 
-  let editor = ace.edit( editorElement, {
-    mode: "ace/mode/python",
-    theme: "ace/theme/monokai",
-    autoScrollEditorIntoView: true
-  });
+    /** @type {string} Current autosave path. Defaults to "./autosave-#.txt" with unique #. */
+    this.path = path ?? `./autosave-${Editor.lastid++}.txt`;
+    /** @type {number} Autosave interval in seconds. */
+    this.saveInterval = 1;
 
-  // Editor autosave system
-  // Saves every second if changes have been made.
-  let editorTimeStamp = Date.now();
-  let editorDirty = false;
-  // Create save thread
-  let editorSaveLoop = (async () => {
-    while (true) {
-      if (editorDirty && Date.now() > (editorTimeStamp + 1000)) {
-        window.localStorage.setItem("./main.py", editor.getValue());
-        editorDirty = false;
-        editorTimeStamp = Date.now();
-      }
-      await new Promise(r => setTimeout(r, 1000));
-    }
-  })();
-  // Store thread to return
-  editor.autosaveThread = editorSaveLoop;
-  // Add event to mark editor for saving
-  editor.addEventListener("change", (delta) => {
-    editorDirty = true;
-    editorTimeStamp = Date.now();
-  });
+    this.timeStamp = Date.now();
+    this.dirty = false;
 
-  // Load editor and save values
-  let save = window.localStorage.getItem("./main.py");
-  if (save && save !== "") {
-    editor.setValue(save);
-  } else {
-    // Default python code
-    editor.setValue("# from pylib.games.shooter import game");
+    // Add event to mark editor for saving
+    this.editor.addEventListener("change", (delta) => {
+      this.markDirty();
+    });
   }
 
-  return editor;
+  init() {
+    this.loadOrDefault(this.defaultValue);
+    this.startAutoSave();
+  }
+
+  startAutoSave() {
+    this.stopAutoSave();
+    // Create save thread
+    this.autoSaveThread = (async () => {
+      // Declared here to ensure multiple threads cannot run simultaneously.
+      let running = true;
+      while (running) {
+        if (this.dirty && Date.now() > (this.timeStamp + this.saveInterval * 1000)) {
+          this.autoSave();
+        }
+        await new Promise(r => {
+          this.#stopThread = () => {
+            running = false;
+            r();
+          };
+          setTimeout(r, this.saveInterval * 1000)
+        });
+      }
+    })();
+  }
+
+  stopAutoSave() {
+    this.#stopThread?.();
+  }
+
+  markDirty() {
+    this.dirty = true;
+    this.timeStamp = Date.now();
+  }
+
+  autoSave() {
+    window.localStorage.setItem(this.path, this.editor.getValue());
+    this.dirty = false;
+    this.timeStamp = Date.now();
+  }
+
+  loadOrDefault(defaultValue = "") {
+    let save = window.localStorage.getItem(this.path);
+    if (save && save !== "") {
+      this.editor.setValue(save);
+      this.dirty = false;
+      this.timeStamp = Date.now();
+    } else {
+      this.editor.setValue(defaultValue);
+      this.autoSave();
+    }
+  }
 }

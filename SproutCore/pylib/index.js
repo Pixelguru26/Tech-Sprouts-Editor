@@ -6,12 +6,17 @@ import html from "./html.py.js";
 import shared from "./shared.py.js";
 import state from "./state.py.js";
 
+import ShooterGame from "./games/shooter.py.js";
+
 export default {
+  shared: shared,
   autoutil: autoutil,
   bullets: bullets,
   entity: entity,
   game: game,
   html: html,
-  shared: shared,
-  state: state
+  state: state,
+  games: {
+    shooter: ShooterGame
+  }
 };

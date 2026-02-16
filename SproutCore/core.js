@@ -33,6 +33,7 @@ const SproutCoreClass = class SproutCore {
     this.pyInitialized = false;
     this.py = null;
     this.pyReceivers = [];
+    this.eventListeners = {};
   }
   async init(consoleManager) {
     this.consoleManager = consoleManager;
@@ -295,9 +296,9 @@ const SproutCoreClass = class SproutCore {
 
         // Draw
         try {
-          this.g.c.resetTransform();
-          this.g.c.fillStyle = "black";
-          this.g.c.fillRect(0, 0, this.g.c.canvas.width, this.g.c.canvas.height);
+          this.g.canvasContext.resetTransform();
+          this.g.canvasContext.fillStyle = "black";
+          this.g.canvasContext.fillRect(0, 0, this.g.canvasContext.canvas.width, this.g.canvasContext.canvas.height);
           this.game?.["draw"]();
           this.userpy?.["draw"]?.();
         } catch (e) {
@@ -307,6 +308,7 @@ const SproutCoreClass = class SproutCore {
         }
 
         // Yield to browser/os. Required to avoid freezing.
+        // Includes limiting to 60fps. No reason to add a user setting yet.
         await new Promise(r => setTimeout(r, (1000/60 - (currentTime - lastTime))));
       }
     } catch(e) {

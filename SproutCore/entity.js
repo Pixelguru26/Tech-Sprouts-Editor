@@ -46,7 +46,7 @@ let Entity = class Entity {
 
   static draw(entity) {
     /** @type {Graphics} */
-    const g = this.SproutCore.g;
+    const g = this.SproutCore.graphics;
     /** @type {Shape} */
     let body = entity["body"];
     let x = body.x;
