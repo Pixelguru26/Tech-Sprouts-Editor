@@ -63,6 +63,9 @@ export default class PageManager {
     this.sproutCore.addEventListener("error", (err, str, arr) => {
       this.console.print(str, true, true);
     });
+    this.console.addInputEventListener((text) => {
+      this.sproutCore.callPyEvent("input", text);
+    });
     this.sproutCore.addEventListener("setui", (...elements) => {
       gameUI.replaceChildren(...elements);
     });

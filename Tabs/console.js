@@ -54,6 +54,8 @@ export default class ConsoleManager {
     this.que = [];
     this.queValues = [];
     this.parent = parent;
+    this.inputEventListeners = [];
+    this.printEventListeners = [];
     this.container = JSLib.build([
       "div", {
         class: "console-container"
@@ -127,12 +129,20 @@ export default class ConsoleManager {
     }
   }
 
+  /**
+   * 
+   * @param {function(string)} listener 
+   */
   addInputEventListener(listener) {
     if (!this.inputEventListeners.includes(listener)) {
       this.inputEventListeners.push(listener);
     }
   }
 
+  /**
+   * 
+   * @param {function(string)} listener 
+   */
   removeInputEventListener(listener) {
     let i = this.inputEventListeners.indexOf(listener);
     if (i != -1) {
@@ -166,8 +176,8 @@ export default class ConsoleManager {
 
     let evt;
     for (let i = 0; i < this.inputEventListeners.length; i++) {
-      evt = new CustomEvent("consoleInput", { detail: {value: str}, target: this });
-      this.inputEventListeners[i](evt);
+      // evt = new CustomEvent("consoleInput", { detail: {value: str}, target: this });
+      this.inputEventListeners[i](str);
     }
   }
 
