@@ -1,4 +1,4 @@
-import JSLib from "./lib.js";
+import JSLib from "../SproutCore/lib.js";
 
 export class ConsoleEntry {
   constructor(row, date, data, count = 0) {
@@ -92,8 +92,11 @@ export default class ConsoleManager {
 
     // Search for duplicate messages; these will be consolidated
     let i = -1;
-    for (let j = 0; j < this.que.length; j++) {
-      if (this.que[j] === str) i = j;
+    if (str.trim() !== "") {
+      // Sometimes whitespace is necessary.
+      for (let j = 0; j < this.que.length; j++) {
+        if (this.que[j] === str) i = j;
+      }
     }
 
     if (i > -1) {
@@ -183,5 +186,18 @@ export default class ConsoleManager {
 
   clear() {
     this.consoleElement.replaceChildren();
+  }
+
+  async awaitInput() {
+    let ret = null;
+    await new Promise((r) => {
+      let listener = (str) => {
+        ret = str;
+        this.removeInputEventListener(listener);
+        r();
+      }
+      this.addInputEventListener(listener);
+    });
+    return ret;
   }
 }

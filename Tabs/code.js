@@ -1,4 +1,4 @@
-import JSLib from "./lib.js";
+import JSLib from "../SproutCore/lib.js";
 
 export default class Editor {
   static lastid = 0;
@@ -7,10 +7,15 @@ export default class Editor {
   constructor(path = null, defaultValue = "") {
     this.defaultValue = defaultValue;
     this.editorElement = JSLib.buildElement("div", {class: "editor-container"});
+
     this.editor = ace.edit(this.editorElement, {
       mode: "ace/mode/python",
       theme: "ace/theme/monokai",
-      autoScrollEditorIntoView: true
+      autoScrollEditorIntoView: true,
+      useSoftTabs: true,
+      copyWithEmptySelection: true,
+      mergeUndoDeltas: true,
+      scrollPastEnd: 1
     });
 
     /** @type {string} Current autosave path. Defaults to "./autosave-#.txt" with unique #. */

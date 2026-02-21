@@ -14,9 +14,8 @@ class GameClass:
     this.world = SproutCore.GameWorld.new()
     this.asset = SproutCore.Asset
     this.geo = SproutCore.Geo
-    this.keyreg = dict()
-    # util
     this.entity = Entity
+    this.keyreg = dict()
     this.player = None # Required due to playerweapon initialization
   
   def init(this):

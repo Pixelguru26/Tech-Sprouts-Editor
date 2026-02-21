@@ -1,4 +1,4 @@
-import JSLib from "./lib.js";
+import JSLib from "../SproutCore/lib.js";
 
 function uid(id) {
   let uid = id;

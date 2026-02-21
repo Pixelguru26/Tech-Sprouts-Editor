@@ -10,7 +10,7 @@ from pylib.game import GameClass
 from pylib.state import GameState
 from math import sin, cos, pi
 
-game = None
+game = SproutCore.game
 
 class ShooterGame(GameClass):
   def __init__(this):
@@ -19,12 +19,10 @@ class ShooterGame(GameClass):
     this.gamestates["menu"] = ShooterGame.StateMenu()
     this.gamestates["play"] = ShooterGame.StatePlay()
     this.gamestates["dead"] = ShooterGame.StateDead()
+    this.player = ShooterGame.PlayerEntity()
   
   def addMenuButton(this, text, fn):
     this.gamestates["menu"].addMenuButton(text, fn)
-
-  def foo(this):
-    return "bar"
   
   def init(this):
     this.bg0 = ShooterGame.Background(SproutCore.Asset.getAsset("bg0"))
@@ -37,7 +35,6 @@ class ShooterGame(GameClass):
     this.bg1.ay = 20
     this.bg1.sx = 0.4
     this.bg1.sy = 0.4
-    this.player = ShooterGame.PlayerEntity()
     super().init()
 
   def update(this, dt):
@@ -422,7 +419,6 @@ class ShooterGame(GameClass):
       this.ui = pyodide.code.run_js(
         '''
         (jsl, core) => {
-          console.log(core.game["player"]["score"]);
           return jsl.build([
             "div", {style: {
               width: "100%",

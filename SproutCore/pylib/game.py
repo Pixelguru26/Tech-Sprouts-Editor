@@ -13,10 +13,10 @@ class GameClass:
     this.world = SproutCore.GameWorld.new()
     this.asset = SproutCore.Asset
     this.geo = SproutCore.Geo
-    this.keyreg = dict()
-    # util
     this.entity = Entity
+    this.keyreg = dict()
     this.player = None # Required due to playerweapon initialization
+    this.playerEntity = GameClass.PlayerEntity
   
   def init(this):
     if (this.state == None and "menu" in this.gamestates):
@@ -123,3 +123,36 @@ class GameClass:
   def input(this, value):
     if (value == "cls" or value == "clear"):
       SproutCore.clear()
+  
+  class PlayerEntity(Entity):
+    def __init__(this):
+      super().__init__()
+      this.lifetime = -1
+      this.sprite = SproutCore.game.asset.getAsset("player_base")
+      this.collisionType = "circle"
+      this.autoscale = True
+      this.team = "player"
+      this.body.r = 50
+      this.persistent = True
+      this.clamp = True
+      this.score = 0
+    
+    def reset(this):
+      this.alive = True
+      this.health = 100
+      this.score = 0
+      this.body.x = 450
+      this.body.y = 540
+      this.angle = 0
+    
+    def update(this, dt):
+      super().update(dt)
+      # Clamping
+      if this.clamp:
+        if (this.x < 0): this.x = 0
+        if (this.x > 900): this.x = 900
+        if (this.y < 0): this.y = 0
+        if (this.y > 600): this.y = 600
+    
+    def keydown(this, key):
+        pass #todo
