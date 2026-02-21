@@ -59,12 +59,133 @@ class GLSystem {
 
 export default class Graphics {
   /**
-   * 
-   * @param {CanvasRenderingContext2D} ctx 
+   * @param {number} width
+   * @param {number} height
    */
-  constructor(ctx) {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
     /** @type {CanvasRenderingContext2D} */
-    this.c = ctx;
+    this.canvasContext = null;
+    this.resizeReceivers = [];
+  }
+
+  bindCanvasContext(ctx) {
+    this.canvasContext = ctx;
+    this.width = ctx.canvas.width;
+    this.height = ctx.canvas.height;
+  }
+
+  addEventListener(eventType, listener) {
+    if (eventType === "resize") {
+      this.resizeReceivers.push(listener);
+    }
+  }
+
+  removeEventListener(eventType, listener) {
+    if (eventType === "resize") {
+      const index = this.resizeReceivers.indexOf(listener);
+      if (index !== -1) {
+        this.resizeReceivers.splice(index, 1);
+      }
+    }
+  }
+
+  publishEvent(eventType, ...args) {
+    if (eventType === "resize") {
+      for (let listener of this.resizeReceivers) {
+        try {
+          listener(...args);
+        } catch (e) {
+          console.error(`Error in resize event listener:`, e);
+        }
+      }
+    }
+  }
+
+  /**
+   * Attempts to resize the bound canvas to the specified dimensions.
+   * @param {number} width 
+   * @param {number} height 
+   */
+  resize(width, height) {
+    let oldWidth = this.width;
+    let oldHeight = this.height;
+    this.width = width;
+    this.height = height;
+    if (this.canvasContext) {
+      this.canvasContext.canvas.width = width;
+      this.canvasContext.canvas.height = height;
+    }
+    this.publishEvent("resize", width, height, oldWidth, oldHeight);
+  }
+
+  /**
+   * Passthrough for `canvas.resetTransform();`
+   */
+  ResetTransform() {
+    this.canvasContext?.resetTransform();
+  }
+
+  /**
+   * Fills the canvas with the specified color
+   * regardless of current transformations.
+   * @param {string} color 
+   * @returns 
+   */
+  fillCanvas(color) {
+    if (!this.canvasContext) return;
+    let ctx = this.canvasContext;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    let oldColor = ctx.fillStyle;
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.fillStyle = oldColor;
+    ctx.restore();
+  }
+
+  /**
+   * Fills an axis-aligned rectangle with the specified color.
+   * To rotate, use transforms.
+   * @param {number} x 
+   * @param {number} y 
+   * @param {number} w 
+   * @param {number} h 
+   * @param {string} color 
+   * @returns 
+   */
+  fillRect(x, y, w, h, color) {
+    if (!this.canvasContext) return;
+    let ctx = this.canvasContext;
+    let oldColor = ctx.fillStyle;
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = oldColor;
+  }
+
+  /**
+   * 
+   * @param {string} color 
+   * @param {boolean} close 
+   * @param  {...number} points Line points in the form [x1, y1, x2, y2, ...]
+   * @returns 
+   */
+  polyLine(color, close = false, ...points) {
+    if (!this.canvasContext) return;
+    let ctx = this.canvasContext;
+    let oldColor = ctx.strokeStyle;
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(points[0], points[1]);
+    for (let i = 2; i < points.length; i += 2) {
+      ctx.lineTo(points[i], points[i + 1]);
+    }
+    if (close) {
+      ctx.closePath();
+    }
+    ctx.stroke();
+    ctx.strokeStyle = oldColor;
   }
 
   /**
@@ -80,7 +201,7 @@ export default class Graphics {
      * @param {number?} dy 0 by default
      */
   transformRaw(scaleX = 1, skewVert = 0, skewHoriz = 0, scaleY = 1, dx = 0, dy = 0) {
-    this.c.transform(scaleX, skewVert, skewHoriz, scaleY, dx, dy);
+    this.canvasContext?.transform(scaleX, skewVert, skewHoriz, scaleY, dx, dy);
   }
   /**
    * Applies a common image drawing transform.
@@ -94,23 +215,30 @@ export default class Graphics {
    * @param {number} cy y position of pivot point
    */
   transform(dx, dy, sx, sy, r, cx, cy) {
-    const c = this.c;
+    if (!this.canvasContext) return;
+    const c = this.canvasContext;
+    if (!c) return;
+    const widthFactor = c.canvas.width / this.width;
+    const heightFactor = c.canvas.height / this.height;
     if (r != 0) {
-      c.translate(cx, cy);
+      c.translate(cx * widthFactor, cy * heightFactor);
       c.rotate(r * deg);
-      c.translate(-cx, -cy);
+      c.translate(-cx * widthFactor, -cy * heightFactor);
     }
-    c.translate(dx, dy);
-    c.scale(sx, sy);
+    c.translate(dx * widthFactor, dy * heightFactor);
+    c.scale(sx * widthFactor, sy * heightFactor);
   }
   debugRect(x, y, w, h = null) {
+    const c = this.canvasContext;
+    if (!c) return;
+    const widthFactor = c.canvas.width / this.width;
+    const heightFactor = c.canvas.height / this.height;
     h ??= w;
-    const c = this.c;
     let oldColor = c.strokeStyle;
     let oldWidth = c.lineWidth;
     c.strokeStyle = "red";
     c.lineWidth = 3;
-    c.strokeRect(x, y, w, h);
+    c.strokeRect(x * widthFactor, y * heightFactor, w * widthFactor, h * heightFactor);
     c.strokeStyle = oldColor;
     c.lineWidth = oldWidth;
   }
@@ -121,14 +249,17 @@ export default class Graphics {
     this.debugRect(x, y, w, h);
   }
   debugCircle(x, y, r) {
-    const c = this.c;
+    const c = this.canvasContext;
+    if (!c) return;
+    const widthFactor = c.canvas.width / this.width;
+    const heightFactor = c.canvas.height / this.height;
     let oldColor = c.strokeStyle;
     let oldWidth = c.lineWidth;
     c.strokeStyle = "red";
     c.lineWidth = 3;
 
     c.beginPath();
-    c.arc(x, y, r, 0, Math.PI + Math.PI);
+    c.arc(x * widthFactor, y * heightFactor, r * widthFactor, 0, Math.PI + Math.PI);
     c.stroke();
     c.closePath();
 
@@ -136,15 +267,18 @@ export default class Graphics {
     c.lineWidth = oldWidth;
   }
   debugLine(x1, y1, x2, y2) {
-    const c = this.c;
+    const c = this.canvasContext;
+    if (!c) return;
+    const widthFactor = c.canvas.width / this.width;
+    const heightFactor = c.canvas.height / this.height;
     let oldColor = c.strokeStyle;
     let oldWidth = c.lineWidth;
     c.strokeStyle = "red";
     c.lineWidth = 3;
 
     c.beginPath();
-    c.moveTo(x1, y1);
-    c.lineTo(x2, y2);
+    c.moveTo(x1 * widthFactor, y1 * heightFactor);
+    c.lineTo(x2 * widthFactor, y2 * heightFactor);
     c.stroke();
     c.closePath();
 
@@ -152,12 +286,15 @@ export default class Graphics {
     c.lineWidth = oldWidth;
   }
   debugDot(x, y) {
-    const c = this.c;
+    const c = this.canvasContext;
+    if (!c) return;
+    const widthFactor = c.canvas.width / this.width;
+    const heightFactor = c.canvas.height / this.height;
     let oldColor = c.fillStyle;
     c.fillStyle = "red";
     
     c.beginPath();
-    c.arc(x, y, 3, 0, Math.PI + Math.PI);
+    c.arc(x * widthFactor, y * heightFactor, 3 * widthFactor, 0, Math.PI * 2);
     c.fill();
     c.closePath();
 
@@ -177,7 +314,8 @@ export default class Graphics {
    * @param {number} [clock=0] time in seconds for animated images
    */
   draw(img, x, y, sx = 1, sy = 1, r = 0, cx = null, cy = null, clock = 0) {
-    const c = this.c;
+    const c = this.canvasContext;
+    if (!c) return;
     c.save();
     this.transform(x, y, sx, sy, r, cx ?? x, cy ?? y);
     if (img instanceof Asset) {
@@ -201,7 +339,8 @@ export default class Graphics {
    * @param {number} [clock=0] time in seconds for animated images
    */
   drawCentered(img, x, y, sx, sy, r = 0, cx = null, cy = null, clock = 0) {
-    const c = this.c;
+    const c = this.canvasContext;
+    if (!c) return;
     c.save();
     this.transform(x, y, sx, sy, r, cx ?? x, cy ?? y);
     c.translate(-(img.width ?? img.w ?? img.naturalWidth) / 2, -(img.height ?? img.h ?? img.naturalHeight) / 2);
@@ -229,7 +368,8 @@ export default class Graphics {
    * @param {number} [clock=0] time in seconds for animated images
    */
   drawRect(img, x, y, w, h, r = 0, cx = null, cy = null, clock = 0) {
-    const c = this.c;
+    const c = this.canvasContext;
+    if (!c) return;
     c.save();
     this.transform(x, y, w / (img.width ?? img.w ?? img.naturalWidth), h / (img.height ?? img.h ?? img.naturalHeight), r, cx ?? x, cy ?? y);
     if (img instanceof Asset) {

@@ -1,4 +1,4 @@
-import JSLib from "./lib.js";
+import JSLib from "../SproutCore/lib.js";
 
 export class ConsoleEntry {
   constructor(row, date, data, count = 0) {
@@ -34,14 +34,14 @@ export class ConsoleEntry {
 
   get count() {
     let ret = this.elementCounter.textContent;
-    if (!ret || ret == "") return 0;
+    if (!ret || ret == "") return 1;
     return +ret;
   }
   set count(v) {
-    if (v === 0)
+    if (v === 0 || v === 1)
       this.elementCounter.textContent = "";
     else
-      this.elementCounter.textContent = toString(v);
+      this.elementCounter.textContent = v.toString();
   }
 
   setCurrent() {
@@ -49,23 +49,54 @@ export class ConsoleEntry {
   }
 }
 
-export class ConsoleManager {
-  constructor(container, consoleElement, inputElement) {
-    this.container = container;
-    this.consoleElement = consoleElement;
-    this.inputElement = inputElement;
-    this.inputEventListeners = [];
-    this.printEventListeners = [];
+export default class ConsoleManager {
+  constructor(parent) {
     this.que = [];
     this.queValues = [];
-    this.queLength = 1;
+    this.parent = parent;
+    this.inputEventListeners = [];
+    this.printEventListeners = [];
+    this.container = JSLib.build([
+      "div", {
+        class: "console-container"
+      }, [
+        [
+          "div", { class: "console-bound" }
+        ]
+      ]
+    ], parent);
+    this.consoleElement = JSLib.buildElement("table", {
+      class: "console"
+    });
+    this.container.firstChild.appendChild(this.consoleElement);
+    this.inputElement = JSLib.buildElement("div", {
+      class: "console-input",
+      contenteditable: true,
+      onkeydown: (event) => {
+        if (event.key.toLowerCase() == "enter" && !event.shiftKey) {
+          event.preventDefault();
+          let tmp = this.inputElement.textContent;
+          this.inputElement.textContent = "";
+          this.input(tmp);
+        }
+      }
+    }
+    );
+    this.container.appendChild(this.inputElement);
   }
 
-  print(str, multiline = true) {
+  print(str, multiline = true, error = false) {
+    if (!(str instanceof String)) {
+      str = str.toString();
+    }
+
     // Search for duplicate messages; these will be consolidated
     let i = -1;
-    for (let j = 0; j < this.que.length; j++) {
-      if (this.que[j] === str) i = j;
+    if (str.trim() !== "") {
+      // Sometimes whitespace is necessary.
+      for (let j = 0; j < this.que.length; j++) {
+        if (this.que[j] === str) i = j;
+      }
     }
 
     if (i > -1) {
@@ -89,6 +120,7 @@ export class ConsoleManager {
         );
         this.que.push(str);
         this.queValues.push(ret);
+        if (error) ret.element.classList.add("error");
         this.consoleElement.append(ret.element);
       }
     }
@@ -100,12 +132,20 @@ export class ConsoleManager {
     }
   }
 
+  /**
+   * 
+   * @param {function(string)} listener 
+   */
   addInputEventListener(listener) {
     if (!this.inputEventListeners.includes(listener)) {
       this.inputEventListeners.push(listener);
     }
   }
 
+  /**
+   * 
+   * @param {function(string)} listener 
+   */
   removeInputEventListener(listener) {
     let i = this.inputEventListeners.indexOf(listener);
     if (i != -1) {
@@ -139,52 +179,25 @@ export class ConsoleManager {
 
     let evt;
     for (let i = 0; i < this.inputEventListeners.length; i++) {
-      evt = new CustomEvent("consoleInput", { detail: {value: str}, target: this });
-      this.inputEventListeners[i](evt);
+      // evt = new CustomEvent("consoleInput", { detail: {value: str}, target: this });
+      this.inputEventListeners[i](str);
     }
   }
 
   clear() {
     this.consoleElement.replaceChildren();
   }
-}
 
-export default (target) => {
-  target ??= document.getElementById("tab-cons");
-  let ret;
-
-  let container = JSLib.build([
-    "div", {
-      class: "console-container"
-    }, [
-      [ "div", { class: "console-bound" }]
-    ]
-  ], target);
-  let consoleElement = JSLib.build([
-    "table", {
-      class: "console"
-    }
-  ], container.firstChild);
-  let input;
-  /**
-   * @param {KeyboardEvent} event 
-   */
-  let inputfunc = function (event) {
-    if (event.key.toLowerCase() == "enter" && !event.shiftKey) {
-      event.preventDefault();
-      let tmp = input.textContent;
-      input.textContent = "";
-      ret.input(tmp);
-    }
+  async awaitInput() {
+    let ret = null;
+    await new Promise((r) => {
+      let listener = (str) => {
+        ret = str;
+        this.removeInputEventListener(listener);
+        r();
+      }
+      this.addInputEventListener(listener);
+    });
+    return ret;
   }
-  input = JSLib.build([
-    "div", {
-      class: "console-input",
-      contenteditable: true,
-      onkeydown: inputfunc
-    }
-  ], container);
-
-  ret = new ConsoleManager(container, consoleElement, input);
-  return ret;
 }

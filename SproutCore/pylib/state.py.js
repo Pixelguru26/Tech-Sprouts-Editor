@@ -1,5 +1,6 @@
 export default `
 import js
+import SproutCore
 
 class GameState:
   """
@@ -39,9 +40,10 @@ class GameState:
     Completely replaces the contents of the game ui container
     with the provided elements.
     """
-    uiContainer = js.document.getElementById("game-ui")
-    if uiContainer != None:
-      uiContainer.replaceChildren(*children)
+    # uiContainer = js.document.getElementById("game-ui")
+    # if uiContainer != None:
+    #   uiContainer.replaceChildren(*children)
+    SproutCore.setUI(*children)
   
   def update(this, dt):
     """

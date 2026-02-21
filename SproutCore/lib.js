@@ -3,6 +3,14 @@
  * suck less.
  */
 
+// Common universal register for root nodes.
+let rootid;
+(() => {
+  let tmp = new Uint32Array(1);
+  crypto.getRandomValues(tmp);
+  rootid = tmp[0];
+})();
+
 const JSLib = class JSLib {
   // Useful constants
   static svgns = "http://www.w3.org/2000/svg";
@@ -240,6 +248,24 @@ const JSLib = class JSLib {
   static getStaticDefault(instance, property) {
     if (Object.hasOwn(instance, property)) return instance["property"];
     else return this.getStatic(instance, property);
+  }
+
+  /**
+   * 
+   * @param {HTMLElement} element 
+   */
+  static nestID(element, separator = "/") {
+    if (element.getRootNode() === element) {
+      if (element.id === "") {
+
+      } else {
+        if (!element.jslid) {
+          element.jslid = rootid++;
+        }
+      }
+    } else {
+
+    }
   }
 };
 

@@ -5,21 +5,22 @@ from pylib.state import GameState
 
 class GameClass:
   def __init__(this):
-    this.__title = "Sprout Core Shooter"
+    this.__title = "Default Game"
     this.gamestate = GameState
     this.gamestates = dict()
     this.state = None
-    this.graphics = SproutCore.g
+    this.graphics = SproutCore.graphics
     this.world = SproutCore.GameWorld.new()
     this.asset = SproutCore.Asset
     this.geo = SproutCore.Geo
-    this.keyreg = dict()
-    # util
     this.entity = Entity
+    this.keyreg = dict()
     this.player = None # Required due to playerweapon initialization
+    this.playerEntity = GameClass.PlayerEntity
   
   def init(this):
-    pass
+    if (this.state == None and "menu" in this.gamestates):
+      this.setState("menu")
 
   def __nop__(this): pass
   def __get_title__(this):
@@ -40,47 +41,64 @@ class GameClass:
     if (tgt == old): return
     if (old != None):
       old.exit(targetState)
-      SproutCore.callback("exitState", old.name)
+      SproutCore.callPyEvent("exitState", old.name)
     else:
-      SproutCore.callback("exitState", None)
+      SproutCore.callPyEvent("exitState", None)
     this.state = tgt
     if (not tgt.initialized):
       tgt.load()
-      SproutCore.callback("loadState", targetState)
+      SproutCore.callPyEvent("loadState", targetState)
     tgt.enter()
-    SproutCore.callback("enterState", targetState)
+    SproutCore.callPyEvent("enterState", targetState)
   
+  def exit(this, nextState):
+    SproutCore.setui()
+
   def load(this):
-    if (this.state != None):
+    if (this.state == None):
+      this.world.clear()
+    else:
       this.state.load()
   
   def update(this, dt):
     AutoUpdateUtil.updateAll(dt)
-    if (this.state != None):
+    if (this.state == None):
+      this.world.update(dt)
+    else:
       this.state.update(dt)
   
   def draw(this):
-    if (this.state != None):
+    if (this.state == None):
+      this.world.draw()
+    else:
       this.state.draw()
 
   def keydown(this, key):
     this.keyreg[key.lower()] = True
-    if (this.state != None):
+    if (this.state == None):
+      this.world.keydown(key)
+    else:
       this.state.keydown(key)
 
   def keyup(this, key):
     this.keyreg[key.lower()] = False
-    if (this.state != None):
+    if (this.state == None):
+      this.world.keyup(key)
+    else:
       this.state.keyup(key)
 
   def mousedown(this, b, x, y):
-    this.keyreg["mouse" + b] = True
-    if (this.state != None):
+    this.keyreg["mouse" + str(b)] = True
+    if (this.state == None):
+      this.world.mousedown(b, x, y)
+    else:
       this.state.mousedown(b, x, y)
 
   def mouseup(this, b, x, y):
-    this.keyreg["mouse" + b] = False
-    if (this.state != None):
+    this.keyreg["mouse" + str(b)] = False
+    if (this.state == None):
+      this.world.mouseup(b, x, y)
+    else:
       this.state.mouseup(b, x, y)
 
   def resetKeys(this):
@@ -97,9 +115,44 @@ class GameClass:
     return (key in this.keyreg and this.keyreg[key])
 
   def scroll(this, x, y, dx, dy):
-    if (this.state != None):
+    if (this.state == None):
+      this.world.scroll(x, y, dx, dy)
+    else:
       this.state.scroll(x, y, dx, dy)
 
   def input(this, value):
-    if (value == "cls"):
-      SproutCore.cls()
+    if (value == "cls" or value == "clear"):
+      SproutCore.clear()
+  
+  class PlayerEntity(Entity):
+    def __init__(this):
+      super().__init__()
+      this.lifetime = -1
+      this.sprite = SproutCore.game.asset.getAsset("player_base")
+      this.collisionType = "circle"
+      this.autoscale = True
+      this.team = "player"
+      this.body.r = 50
+      this.persistent = True
+      this.clamp = True
+      this.score = 0
+    
+    def reset(this):
+      this.alive = True
+      this.health = 100
+      this.score = 0
+      this.body.x = 450
+      this.body.y = 540
+      this.angle = 0
+    
+    def update(this, dt):
+      super().update(dt)
+      # Clamping
+      if this.clamp:
+        if (this.x < 0): this.x = 0
+        if (this.x > 900): this.x = 900
+        if (this.y < 0): this.y = 0
+        if (this.y > 600): this.y = 600
+    
+    def keydown(this, key):
+        pass #todo
