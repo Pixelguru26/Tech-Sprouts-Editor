@@ -4,12 +4,7 @@
  */
 
 // Common universal register for root nodes.
-let rootid;
-(() => {
-  let tmp = new Uint32Array(1);
-  crypto.getRandomValues(tmp);
-  rootid = tmp[0];
-})();
+let rootid = 0;
 
 const JSLib = class JSLib {
   // Useful constants
@@ -254,18 +249,50 @@ const JSLib = class JSLib {
    * 
    * @param {HTMLElement} element 
    */
-  static nestID(element, separator = "/") {
-    if (element.getRootNode() === element) {
-      if (element.id === "") {
-
-      } else {
-        if (!element.jslid) {
-          element.jslid = rootid++;
-        }
+  static siblingIndex(element) {
+    let list = element.parentElement?.children;
+    if (list) {
+      for (let i = 0; i < list.length; i++) {
+        if (list[i] === element) return i;
       }
-    } else {
-
     }
+    return 0;
+  }
+
+  /**
+   * Automatically generates a unique, deterministic id for the provided element
+   * based on its current hierarchy. If the hierarchy of an element is altered,
+   * the id will no longer be valid.
+   * @param {HTMLElement} element 
+   */
+  static nestID(element) {
+    let state = element;
+    let path = [];
+    while (state) {
+      if (state.getRootNode() === state) {
+        // Root found, terminate path
+        element.jslid ??= `JSLRoot[${element.tagName}][${rootid++}]`;
+        path.unshift(element.jslid);
+        // console.log(element.jslid);
+        break;
+      } else if (state.parentElement) {
+        // Name relative to parent
+        if (state.id === "") {
+          path.unshift(`${state.tagName}[${this.siblingIndex(state)}]`);
+          // console.log(`${state.tagName}[${this.siblingIndex(state)}]`);
+        } else {
+          path.unshift(state.id);
+          // console.log(state.id);
+        }
+        state = state.parentElement;
+      } else {
+        // No parent or root to name from, terminate path
+        path.unshift(`[null][${state.tagName}]`);
+        // console.log(`[null][${state.tagName}]`);
+        break;
+      }
+    }
+    return path.join('/');
   }
 };
 

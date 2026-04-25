@@ -379,4 +379,225 @@ export default class Graphics {
     }
     c.restore();
   }
+
+  /**
+   * Warning: final width defined by size, font, and text content.
+   * @param {string} string 
+   * @param {number} x top left corner
+   * @param {number} y top left corner
+   * @param {string} font defaults to "16px sans-serif"
+   * @param {string} color defaults to "white"
+   * @param {string} outline defaults to "black"
+   * @param {number} outlineWidth defaults to 3
+   */
+  drawTextSimple(string, x, y, font = "16px sans-serif", color = "white", outline = "black", outlineWidth = 3) {
+    const c = this.canvasContext;
+    if (!c) return;
+    c.save();
+    c.font = font;
+    c.textBaseline = "top";
+    c.fillStyle = color;
+    c.strokeStyle = outline;
+    c.lineWidth = outlineWidth;
+    c.fillText(string, x, y);
+    c.strokeText(string, x, y);
+    c.restore();
+  }
+
+  /**
+   * Warning: final width defined by size, font, and text content.
+   * Draws text centered vertically and horizontally on the provided coordinates.
+   * @param {string} string 
+   * @param {number} x center x
+   * @param {number} y center y
+   * @param {string} font defaults to "16px sans-serif"
+   * @param {string} color defaults to "white"
+   * @param {string} outline defaults to "black"
+   * @param {number} outlineWidth defaults to 3
+   */
+  drawTextCentered(string, x, y, font = "16px sans-serif", color = "white", outline = "black", outlineWidth = 3) {
+    const c = this.canvasContext;
+    if (!c) return;
+    c.save();
+    c.font = font;
+    c.textBaseline = "top";
+    const textMetrics = c.measureText(string);
+    const textWidth = textMetrics.width;
+    const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+    c.fillStyle = color;
+    c.strokeStyle = outline;
+    c.lineWidth = outlineWidth;
+    c.fillText(string, x - textWidth * 0.5, y - textHeight * 0.5);
+    c.strokeText(string, x - textWidth * 0.5, y - textHeight * 0.5);
+    c.restore();
+  }
+
+
+  /**
+   * Draws text that is scaled to fit within a given rectangle.
+   * @param {string} string
+   * @param {number} x top left corner of bounds
+   * @param {number} y top left corner of bounds
+   * @param {number} width
+   * @param {number} height
+   * @param {string?} font defaults to "16px sans-serif", actual size determined by bounding box
+   * @param {string?} color defaults to "white"
+   * @param {string?} outline defaults to "black"
+   * @param {number?} outlineWidth defaults to 3
+   */
+  drawFittedText(string, x, y, width, height, font = "16px sans-serif", color = "white", outline = "black", outlineWidth = 3) {
+    const c = this.canvasContext;
+    if (!c) return;
+    c.save();
+    c.font = font;
+    c.textBaseline = "top";
+    const textMetrics = c.measureText(string);
+    const textWidth = textMetrics.width;
+    const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+    let scale = Math.min(width / textWidth, height / textHeight);
+    c.translate(x, y);
+    c.scale(scale, scale);
+    c.fillStyle = color;
+    c.strokeStyle = outline;
+    c.lineWidth = outlineWidth;
+    c.strokeText(string, 0, 0);
+    c.fillText(string, 0, 0);
+    c.restore();
+  }
+
+  /**
+   * Draws text that is scaled and centered to fit within a given rectangle.
+   * @param {string} string
+   * @param {number} x top left corner of bounds
+   * @param {number} y top left corner of bounds
+   * @param {number} width
+   * @param {number} height
+   * @param {string?} font defaults to "16px sans-serif", actual size determined by bounding box
+   * @param {string?} color defaults to "white"
+   * @param {string?} outline defaults to "black"
+   * @param {number?} outlineWidth defaults to 3
+   */
+  drawFittedTextCentered(string, x, y, width, height, font = "16px sans-serif", color = "white", outline = "black", outlineWidth = 3) {
+    const c = this.canvasContext;
+    if (!c) return;
+    c.save();
+    c.font = font;
+    c.textBaseline = "top";
+    const textMetrics = c.measureText(string);
+    const textWidth = textMetrics.width;
+    const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+    let scale = Math.min(width / textWidth, height / textHeight);
+    c.translate(x + (width - textWidth * scale) * 0.5, y + (height - textHeight * scale) * 0.5);
+    c.scale(scale, scale);
+    c.fillStyle = color;
+    c.strokeStyle = outline;
+    c.lineWidth = outlineWidth;
+    c.strokeText(string, 0, 0);
+    c.fillText(string, 0, 0);
+    c.restore();
+  }
+
+  /**
+   * Draws text that is stretched to exactly fit within the given rectangle.
+   * @param {string} string 
+   * @param {number} x top left corner
+   * @param {number} y top left corner
+   * @param {number} width 
+   * @param {number} height 
+   * @param {string?} font defaults to "16px sans-serif"
+   * @param {string?} color defaults to "white"
+   * @param {string?} outline defaults to "black"
+   * @param {number?} outlineWidth defaults to 3
+   */
+  drawStretchText(string, x, y, width, height, font = "16px sans-serif", color = "white", outline = "black", outlineWidth = 3) {
+    const c = this.canvasContext;
+    if (!c) return;
+    c.save();
+    c.font = font;
+    c.textBaseline = "top";
+    const textMetrics = c.measureText(string);
+    const textWidth = textMetrics.width;
+    const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+    let scaleX = width / textWidth;
+    let scaleY = height / textHeight;
+    c.translate(x, y);
+    c.scale(scaleX, scaleY);
+    c.fillStyle = color;
+    c.strokeStyle = outline;
+    c.lineWidth = outlineWidth;
+    c.strokeText(string, 0, 0);
+    c.fillText(string, 0, 0);
+    c.restore();
+  }
+
+  /**
+   * Draws text in a given rectangle, with options for fitting and alignment.
+   * "fit" uses the minimum uniform scale necessary to fit the text within the bounds.
+   * "stretch" scales the text non-uniformly to fill the bounds exactly.
+   * @param {string} string 
+   * @param {number} x top left corner of bounds
+   * @param {number} y top left corner of bounds
+   * @param {number} width width of bounds in pixels
+   * @param {number} height height of bounds in pixels
+   * @param {string?} font defaults to "16px sans-serif"
+   * @param {string?} color defaults to "white"
+   * @param {string?} outline defaults to "black"
+   * @param {number?} outlineWidth defaults to 3
+   * @param {string?} fit any of "none", "fit", or "stretch". Defaults to "none". Determines automatic scaling behavior.
+   * @param {string?} alignHoriz any of "left", "center", or "right". Defaults to "center". Determines horizontal alignment within the bounding box and sets canvas text alignment for the operation.
+   * @param {string?} alignVert any of "top", "center", or "bottom". Defaults to "center". Determines vertical alignment within the bounding box.
+   */
+  drawText(string, x, y, width, height, font = "16px sans-serif", color = "white", outline = "black", outlineWidth = 3, fit = "none", alignHoriz = "center", alignVert = "center") {    const c = this.canvasContext;
+    if (!c) return;
+    // Validate horizontal alignment before I screw up the canvas state
+    if (!["left", "center", "right"].includes(alignHoriz)) return;
+    c.save();
+    c.font = font;
+    c.textBaseline = "top";
+    c.textAlign = alignHoriz;
+    const textMetrics = c.measureText(string);
+    const textWidth = textMetrics.width;
+    const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+    let scaleX = 1;
+    let scaleY = 1;
+    if (fit === "fit") {
+      let scale = Math.min(width / textWidth, height / textHeight);
+      scaleX = scaleY = scale;
+    } else if (fit === "stretch") {
+      scaleX = width / textWidth;
+      scaleY = height / textHeight;
+    }
+    if (alignHoriz === "center") {
+      if (alignVert === "center") {
+        c.translate(x + (width - textWidth * scaleX) * 0.5, y + (height - textHeight * scaleY) * 0.5);
+      } else if (alignVert === "bottom") {
+        c.translate(x + (width - textWidth * scaleX) * 0.5, y + height - textHeight * scaleY);
+      } else {
+        c.translate(x + (width - textWidth * scaleX) * 0.5, y);
+      }
+    } else if (alignHoriz === "right") {
+      if (alignVert === "center") {
+        c.translate(x + width - textWidth * scaleX, y + (height - textHeight * scaleY) * 0.5);
+      } else if (alignVert === "bottom") {
+        c.translate(x + width - textWidth * scaleX, y + height - textHeight * scaleY);
+      } else {
+        c.translate(x + width - textWidth * scaleX, y);
+      }
+    } else {
+      if (alignVert === "center") {
+        c.translate(x, y + (height - textHeight * scaleY) * 0.5);
+      } else if (alignVert === "bottom") {
+        c.translate(x, y + height - textHeight * scaleY);
+      } else {
+        c.translate(x, y);
+      }
+    }
+    c.scale(scaleX, scaleY);
+    c.fillStyle = color;
+    c.strokeStyle = outline;
+    c.lineWidth = outlineWidth;
+    c.strokeText(string, 0, 0);
+    c.fillText(string, 0, 0);
+    c.restore();
+  }
 }

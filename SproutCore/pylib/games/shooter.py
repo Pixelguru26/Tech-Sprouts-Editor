@@ -181,7 +181,7 @@ class ShooterGame(GameClass):
         if game.keyState(wep.key):
           wep.sustain()
     
-    def keydown(this, key):
+    def keyDown(this, key):
       for wep in this.weapons:
         if wep.key == key: wep.beginFire()
     
@@ -320,14 +320,14 @@ class ShooterGame(GameClass):
       this.world.update(dt)
     def draw(this):
       this.world.draw()
-    def keydown(this, key):
-      this.world.keydown(key)
-    def keyup(this, key):
-      this.world.keyup(key)
-    def mousedown(this, b, x, y):
-      this.world.mousedown(b, x, y)
-    def mouseup(this, b, x, y):
-      this.world.mouseup(b, x, y)
+    def keyDown(this, key):
+      this.world.keyDown(key)
+    def keyUp(this, key):
+      this.world.keyUp(key)
+    def mouseDown(this, b, x, y):
+      this.world.mouseDown(b, x, y)
+    def mouseUp(this, b, x, y):
+      this.world.mouseUp(b, x, y)
 
   class StateMenu(GameState):
     def __init__(this):

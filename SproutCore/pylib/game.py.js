@@ -17,6 +17,7 @@ class GameClass:
     this.entity = Entity
     this.keyreg = dict()
     this.player = None # Required due to playerweapon initialization
+    this.playerEntity = GameClass.PlayerEntity
   
   def init(this):
     if (this.state == None and "menu" in this.gamestates):
@@ -73,33 +74,33 @@ class GameClass:
     else:
       this.state.draw()
 
-  def keydown(this, key):
+  def keyDown(this, key):
     this.keyreg[key.lower()] = True
     if (this.state == None):
-      this.world.keydown(key)
+      this.world.keyDown(key)
     else:
-      this.state.keydown(key)
+      this.state.keyDown(key)
 
-  def keyup(this, key):
+  def keyUp(this, key):
     this.keyreg[key.lower()] = False
     if (this.state == None):
-      this.world.keyup(key)
+      this.world.keyUp(key)
     else:
-      this.state.keyup(key)
+      this.state.keyUp(key)
 
-  def mousedown(this, b, x, y):
+  def mouseDown(this, b, x, y):
     this.keyreg["mouse" + str(b)] = True
     if (this.state == None):
-      this.world.mousedown(b, x, y)
+      this.world.mouseDown(b, x, y)
     else:
-      this.state.mousedown(b, x, y)
+      this.state.mouseDown(b, x, y)
 
-  def mouseup(this, b, x, y):
+  def mouseUp(this, b, x, y):
     this.keyreg["mouse" + str(b)] = False
     if (this.state == None):
-      this.world.mouseup(b, x, y)
+      this.world.mouseUp(b, x, y)
     else:
-      this.state.mouseup(b, x, y)
+      this.state.mouseUp(b, x, y)
 
   def resetKeys(this):
     for key in this.keyreg:
@@ -123,5 +124,38 @@ class GameClass:
   def input(this, value):
     if (value == "cls" or value == "clear"):
       SproutCore.clear()
+  
+  class PlayerEntity(Entity):
+    def __init__(this):
+      super().__init__()
+      this.lifetime = -1
+      this.sprite = SproutCore.game.asset.getAsset("player_base")
+      this.collisionType = "circle"
+      this.autoscale = True
+      this.team = "player"
+      this.body.r = 50
+      this.persistent = True
+      this.clamp = True
+      this.score = 0
+    
+    def reset(this):
+      this.alive = True
+      this.health = 100
+      this.score = 0
+      this.body.x = 450
+      this.body.y = 540
+      this.angle = 0
+    
+    def update(this, dt):
+      super().update(dt)
+      # Clamping
+      if this.clamp:
+        if (this.x < 0): this.x = 0
+        if (this.x > 900): this.x = 900
+        if (this.y < 0): this.y = 0
+        if (this.y > 600): this.y = 600
+    
+    def keydown(this, key):
+        pass #todo
 
 `;

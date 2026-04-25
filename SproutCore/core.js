@@ -10,14 +10,14 @@ const PrePy = `
 import SproutCore
 from pylib.game import GameClass
 game = GameClass()
+SproutCore.game = game
 input = SproutCore.requestInput
 
 `;
 
 const PostPy = `
 
-if "game" in locals() and game != None:
-  SproutCore.game = game
+SproutCore.game = game
 `;
 
 const SproutCoreClass = class SproutCore {
@@ -158,38 +158,38 @@ const SproutCoreClass = class SproutCore {
     this.graphics.bindCanvasContext(ctx);
   }
 
-  keydown(evt) {
+  keyDown(evt) {
     if (!evt.repeat) {
       if (evt.key === 'p' && evt.ctrlKey) {
         console.log("Restart requested");
         evt.preventDefault();
         this.run();
       } else {
-        this.callPyEvent("keydown", evt.key);
+        this.callPyEvent("keyDown", evt.key);
       }
     }
   }
-  keyup(evt) {
-    if (!evt.repeat) this.callPyEvent("keyup", evt.key);
+  keyUp(evt) {
+    if (!evt.repeat) this.callPyEvent("keyUp", evt.key);
   }
   /**
    * 
    * @param {MouseEvent} evt 
    */
-  mousedown(evt) {
+  mouseDown(evt) {
     let bounds = this.graphics.canvasContext?.canvas?.getBoundingClientRect?.();
     if (bounds) {
-      this.callPyEvent("mousedown", evt.button, evt.x - bounds.left, evt.y - bounds.top);
+      this.callPyEvent("mouseDown", evt.button, evt.x - bounds.left, evt.y - bounds.top);
     } else {
-      this.callPyEvent("mousedown", evt.button, evt.x, evt.y);
+      this.callPyEvent("mouseDown", evt.button, evt.x, evt.y);
     }
   }
-  mouseup(evt) {
+  mouseUp(evt) {
     let bounds = this.graphics.canvasContext?.canvas?.getBoundingClientRect?.();
     if (bounds) {
-      this.callPyEvent("mouseup", evt.button, evt.x - bounds.left, evt.y - bounds.top);
+      this.callPyEvent("mouseUp", evt.button, evt.x - bounds.left, evt.y - bounds.top);
     } else {
-      this.callPyEvent("mouseup", evt.button, evt.x, evt.y);
+      this.callPyEvent("mouseUp", evt.button, evt.x, evt.y);
     }
   }
 
@@ -276,9 +276,12 @@ const SproutCoreClass = class SproutCore {
           lastTime = currentTime;
           currentTime = Date.now();
           let dt = (currentTime - lastTime) / 1000;
-          this.callPyEvent("update", dt);
-          this.graphics.fillCanvas("black");
-          this.callPyEvent("draw");
+          if (dt !== 0) {
+            // Need to investigate why 0 delay frames are happening.
+            this.callPyEvent("update", dt);
+            this.graphics.fillCanvas("black");
+            this.callPyEvent("draw");
+          }
 
           // Waiting on performance testing to determine which is better
           // await new Promise(r => setTimeout(r, (1000/60 - (currentTime - lastTime))));

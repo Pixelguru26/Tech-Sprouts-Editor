@@ -101,7 +101,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 50%;
-  overflow: hidden;
+  /* overflow: hidden; */
   background-color: #272822;
 }
 .console-bound {

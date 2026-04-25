@@ -6,19 +6,6 @@ import Editor from './Tabs/code.js';
 import SproutCore from './SproutCore/core.js';
 
 export default class PageManager {
-  setPlayButtonState(run = false, animated = false) {
-    if (this.playButton) {
-      if (run) {
-        this.playButton.classList.remove("fa-stop");
-        this.playButton.classList.add("fa-play");
-      } else {
-        this.playButton.classList.remove("fa-play");
-        this.playButton.classList.add("fa-stop");
-      }
-      if (animated) this.playButton.classList.add("animated");
-      else this.playButton.classList.remove("animated");
-    }
-  }
   constructor(container) {
     this.container = container;
     this.tabs = new TabManager(container);
@@ -65,30 +52,33 @@ export default class PageManager {
     this.tabs.addTab(new Tab("code", "Code", editor.editorElement));
     editor.init();
 
+    // Initialize console
     this.console = new ConsoleManager(this.tabs.body);
 
     // Initialize and link SproutCore
     this.sproutCore = SproutCore;
     this.sproutCore.graphics.bindCanvasContext(gameCanvas.getContext("2d"));
     this.sproutCore.graphics.fillCanvas("black");
+    // Link console
     this.sproutCore.addEventListener("print", (str) => {
       this.console.print(str);
     });
     this.sproutCore.addEventListener("error", (err, str, arr) => {
       this.console.print(str, true, true);
     });
-    // this.console.addInputEventListener((text) => {
-    //   this.sproutCore.callPyEvent("input", text);
-    // });
+    this.sproutCore.addEventListener("clear", () => {
+      this.console.clear();
+    });
     this.sproutCore.addEventListener("setui", (...elements) => {
       gameUI.replaceChildren(...elements);
     });
-    document.addEventListener("keydown", (evt) => {this.sproutCore.keydown(evt);});
-    document.addEventListener("keyup", (evt) => {this.sproutCore.keyup(evt);});
-    document.addEventListener("mousedown", (evt) => {this.sproutCore.mousedown(evt);});
-    document.addEventListener("mouseup", (evt) => {this.sproutCore.mouseup(evt);});
+    document.addEventListener("keydown", (evt) => {this.sproutCore.keyDown(evt);});
+    document.addEventListener("keyup", (evt) => {this.sproutCore.keyUp(evt);});
+    document.addEventListener("mousedown", (evt) => {this.sproutCore.mouseDown(evt);});
+    document.addEventListener("mouseup", (evt) => {this.sproutCore.mouseUp(evt);});
 
     // Custom controls
+    // Start/stop button
     this.playButton = JSLib.build([
       "i", {
         id: "game-play-button",
@@ -96,6 +86,7 @@ export default class PageManager {
       }
     ], this.tabs.navbar);
     let lock = false;
+    let requestQue = 0;
     this.playButton.addEventListener("click", (evt) => {
       if (!lock) {
         lock = true;
@@ -116,9 +107,36 @@ export default class PageManager {
     });
     this.sproutCore.addEventListener("gameStopped", () => {
       this.setPlayButtonState(true, false);
+      requestQue = 0;
+      this.console.clearInputEventListeners();
     });
+
+    // Console input
     this.sproutCore.requestInput = async (prompt) => {
-      return await this.console.awaitInput();
+      requestQue++;
+      let ret = await this.console.awaitInput(prompt);
+      consmode--; // what exactly is this?
+      return ret;
+    }
+    this.console.addInputEventListener((str) => {
+      if (requestQue === 0) {
+        if (["clear", "cls"].includes(str.toLowerCase())) {
+          this.console.clear();
+        }
+      }
+    });
+  }
+  setPlayButtonState(run = false, animated = false) {
+    if (this.playButton) {
+      if (run) {
+        this.playButton.classList.remove("fa-stop");
+        this.playButton.classList.add("fa-play");
+      } else {
+        this.playButton.classList.remove("fa-play");
+        this.playButton.classList.add("fa-stop");
+      }
+      if (animated) this.playButton.classList.add("animated");
+      else this.playButton.classList.remove("animated");
     }
   }
 }
