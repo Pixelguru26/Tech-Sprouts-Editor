@@ -21,19 +21,21 @@ class Entity:
     this.scaley = 1
     this.autoscale = False
     this.age = 0
-    this.lifetime = 30
+    this.lifetime = -1
     # Included in base entity rather than living entity
     # because even bullets have a team
     this.team = "none"
     # Physics value section
     this.verlet = False
+    this.gravity = False
     this.angle = 0
-    this.lastx = None
+    this.lastX = None
     this.lastY = None
     this.vx = 0
     this.vy = 0
     this.ax = 0
     this.ay = 0
+    this.world = None
 
     this.body = SproutCore.Geo.Circle.new(0, 0, 0)
     this.sprite = SproutCore.Asset.ImageAsset.getImage("error.png")
@@ -175,29 +177,35 @@ class Entity:
     """
     Called each frame after update to render this entity.
     """
-    SproutCore.Entity.draw(this)
+    if not this.hidden:
+      SproutCore.Entity.draw(this)
   
   def update(this, dt):
     """
     Called each frame before draw to update this entity's state.
     The base includes verlet integration and lifetime handling.
     Args:
-        dt (number): Time since lsat update, in seconds.
+        dt (number): Time since last update, in seconds.
     """
     if this.verlet:
-      if this.lastx == None: this.lastx = this.x
-      if this.lasty == None: this.lasty = this.y
+      if this.lastX == None: this.lastX = this.x
+      if this.lastY == None: this.lastY = this.y
       tempx = this.x
       tempy = this.y
+      
+      ax = this.ax
+      ay = this.ay
+      if this.gravity and this.world != None:
+        ax += this.world.gravityX
+        ay += this.world.gravityY
 
-      # Translation: x += dx + a * dt^2
-      this.x = this.x * 2 - this.lastx + this.ax * dt * dt
-      this.y = this.y * 2 - this.lasty + this.ay * dt * dt
+      this.x += this.vx * dt + 0.5 * ax * dt * dt
+      this.vx += ax * dt
+      this.y += this.vy * dt + 0.5 * ay * dt * dt
+      this.vy += ay * dt
 
-      this.lastx = tempx
-      this.lasty = tempy
-      this.vx = (this.x - tempx) / dt
-      this.vy = (this.y - tempy) / dt
+      this.lastX = tempx
+      this.lastY = tempy
     this.age = this.age + dt
     if (this.age > this.lifetime and this.lifetime > 0):
       this.delete("lifetime")

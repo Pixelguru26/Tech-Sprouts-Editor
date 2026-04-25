@@ -837,7 +837,7 @@ export class Circle extends Shape {
   }
 
   includesPoint(x, y) {
-    return super.includesPoint(x, y) && Math.hypot(x - this.x, y - this.y) <= this.r;
+    return Math.hypot(x - this.x, y - this.y) <= this.r;
   }
 
   convex(vertCount) {

@@ -243,5 +243,9 @@ class EntityWeapon():
     return this.fire(this.timer)
 
 
-
+Entity.BulletEntity = BulletEntity
+Entity.ExplosionEntity = ExplosionEntity
+Entity.ExplodingBulletEntity = ExplodingBulletEntity
+Entity.LanceEntity = LanceEntity
+Entity.EntityWeapon = EntityWeapon
 `;

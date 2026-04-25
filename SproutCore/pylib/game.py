@@ -73,33 +73,33 @@ class GameClass:
     else:
       this.state.draw()
 
-  def keydown(this, key):
+  def keyDown(this, key):
     this.keyreg[key.lower()] = True
     if (this.state == None):
-      this.world.keydown(key)
+      this.world.keyDown(key)
     else:
-      this.state.keydown(key)
+      this.state.keyDown(key)
 
-  def keyup(this, key):
+  def keyUp(this, key):
     this.keyreg[key.lower()] = False
     if (this.state == None):
-      this.world.keyup(key)
+      this.world.keyUp(key)
     else:
-      this.state.keyup(key)
+      this.state.keyUp(key)
 
-  def mousedown(this, b, x, y):
+  def mouseDown(this, b, x, y):
     this.keyreg["mouse" + str(b)] = True
     if (this.state == None):
-      this.world.mousedown(b, x, y)
+      this.world.mouseDown(b, x, y)
     else:
-      this.state.mousedown(b, x, y)
+      this.state.mouseDown(b, x, y)
 
-  def mouseup(this, b, x, y):
+  def mouseUp(this, b, x, y):
     this.keyreg["mouse" + str(b)] = False
     if (this.state == None):
-      this.world.mouseup(b, x, y)
+      this.world.mouseUp(b, x, y)
     else:
-      this.state.mouseup(b, x, y)
+      this.state.mouseUp(b, x, y)
 
   def resetKeys(this):
     for key in this.keyreg:

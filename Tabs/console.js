@@ -60,9 +60,7 @@ export default class ConsoleManager {
       "div", {
         class: "console-container"
       }, [
-        [
-          "div", { class: "console-bound" }
-        ]
+        ["div", { class: "console-bound" }]
       ]
     ], parent);
     this.consoleElement = JSLib.buildElement("table", {
@@ -85,18 +83,15 @@ export default class ConsoleManager {
     this.container.appendChild(this.inputElement);
   }
 
-  print(str, multiline = true, error = false) {
+  print(str, multiline = true, error = false, date = true) {
     if (!(str instanceof String)) {
       str = str.toString();
     }
 
     // Search for duplicate messages; these will be consolidated
     let i = -1;
-    if (str.trim() !== "") {
-      // Sometimes whitespace is necessary.
-      for (let j = 0; j < this.que.length; j++) {
-        if (this.que[j] === str) i = j;
-      }
+    for (let j = 0; j < this.que.length; j++) {
+      if (this.que[j] === str) i = j;
     }
 
     if (i > -1) {
@@ -109,13 +104,14 @@ export default class ConsoleManager {
     } else {
       if (multiline) {
         for (let line of str.split("\n")) {
-          this.print(line, false);
+          this.print(line, false, error, date);
+          date = false;
         }
       } else {
         // Append new log item
         let ret = new ConsoleEntry(
           this.consoleElement.childElementCount.toString(),
-          (new Date()).toLocaleTimeString(),
+          (date ? (new Date()).toLocaleTimeString() : ""),
           str
         );
         this.que.push(str);
@@ -125,7 +121,8 @@ export default class ConsoleManager {
       }
     }
 
-    while (this.que.length > this.queLength) {
+    // Todo: add queue length member
+    while (this.que.length > 1) {
       // Truncate que to specified max length
       this.que.shift();
       this.queValues.shift();
@@ -188,7 +185,10 @@ export default class ConsoleManager {
     this.consoleElement.replaceChildren();
   }
 
-  async awaitInput() {
+  /**
+   * @param {string?} prompt Not yet implemented
+   */
+  async awaitInput(prompt) {
     let ret = null;
     await new Promise((r) => {
       let listener = (str) => {

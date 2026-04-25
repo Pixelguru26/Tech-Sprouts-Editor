@@ -7,6 +7,9 @@ export default class GameWorld {
     this.bullets = [];
     this.entityque = [];
     this.bulletque = [];
+    // Gravity in px/(s^2)
+    this.gravityX = 0;
+    this.gravityY = 100;
   }
 
   new() { return new GameWorld(); }
@@ -57,9 +60,11 @@ export default class GameWorld {
     let buls = this.bullets;
     // Move all items from queue to active
     for (let i = 0; i < entq.length; i++) {
+      entq[i].world = this;
       ents.push(entq[i]);
     }
     for (let i = 0; i < bulq.length; i++) {
+      bulq[i].world = this;
       buls.push(bulq[i]);
     }
     entq.length = 0;
@@ -99,7 +104,10 @@ export default class GameWorld {
       for (let j = 0; j < buls.length; j++) {
         bul = buls[j];
         try {
-          if (bul["alive"] && ent["intersects"]?.(bul)) bul["touch"]?.(ent);
+          if (bul["alive"] && ent["intersects"]?.(bul)) {
+            bul["touch"]?.(ent);
+            GameWorld.SproutCore.callPyEvent("entityCollision", ent, bul);
+          }
         } catch (e) {
           GameWorld.SproutCore.error(e);
           throw new Error(`Error on intersection between entity #${i} and bullet #${j}`, { cause: e });
@@ -111,7 +119,10 @@ export default class GameWorld {
         bul = ents[j];
         try {
           if (ent == bul) continue;
-          if (bul["alive"] && ent["intersects"](bul)) ent["touch"]?.(bul);
+          if (bul["alive"] && ent["intersects"](bul)) {
+            ent["touch"]?.(bul);
+            GameWorld.SproutCore.callPyEvent("entityCollision", ent, bul);
+          }
         } catch (e) {
           GameWorld.SproutCore.error(e);
           throw new Error(`Error on intersection between entity #${i} and #${j}`, { cause: e });
@@ -199,6 +210,7 @@ export default class GameWorld {
    */
   clear() {
     for (let ent of this.entities) try {
+      ent["world"] = null;
       if (!ent["persistent"]) ent["finalize"]?.();
     } catch (e) {
       // Todo
@@ -206,6 +218,7 @@ export default class GameWorld {
     }
     this.entities.length = 0;
     for (let bul of this.bullets) try {
+      bul["world"] = null;
       if (!bul["persistent"]) bul["finalize"]?.();
     } catch (e) {
       // Todo
@@ -228,21 +241,28 @@ export default class GameWorld {
     this.bulletque.length = 0;
   }
 
-  keydown(k) {
-    for (let ent of this.entities) ent["keydown"]?.(k);
-    for (let bul of this.bullets) bul["keydown"]?.(k);
+  keyDown(k) {
+    for (let ent of this.entities) ent["keyDown"]?.(k);
+    for (let bul of this.bullets) bul["keyDown"]?.(k);
   }
-  keyup(k) {
-    for (let ent of this.entities) ent["keyup"]?.(k);
-    for (let bul of this.bullets) bul["keyup"]?.(k);
+  keyUp(k) {
+    for (let ent of this.entities) ent["keyUp"]?.(k);
+    for (let bul of this.bullets) bul["keyUp"]?.(k);
   }
-  mousedown(b, x, y) {
-    for (let ent of this.entities) ent["mousedown"]?.(b, x, y);
-    for (let bul of this.bullets) bul["mousedown"]?.(b, x, y);
+  mouseDown(b, x, y) {
+    for (let ent of this.entities) {
+      // Separated check because Pyodide
+      if (ent["body"]["includesPoint"]?.(x, y)) {
+        console.log("CLICKED ENTITY", ent);
+        GameWorld.SproutCore?.callPyEvent("entityClick", ent, b, x, y);
+      }
+      ent["mouseDown"]?.(b, x, y);
+    }
+    for (let bul of this.bullets) bul["mouseDown"]?.(b, x, y);
   }
-  mouseup(b, x, y) {
-    for (let ent of this.entities) ent["mouseup"]?.(b, x, y);
-    for (let bul of this.bullets) bul["mouseup"]?.(b, x, y);
+  mouseUp(b, x, y) {
+    for (let ent of this.entities) ent["mouseUp"]?.(b, x, y);
+    for (let bul of this.bullets) bul["mouseUp"]?.(b, x, y);
   }
   scroll(x, y, dx, dy) {
     for (let ent of this.entities) ent["scroll"]?.(x, y, dx, dy);

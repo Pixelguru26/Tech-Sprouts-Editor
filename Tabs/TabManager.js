@@ -64,7 +64,7 @@ export class Tab {
 }
 
 export class TabManager {
-  constructor(parent = null) {
+  constructor(parent = null, id = null) {
     this.tabs = [];
     this.currentTab = null;
     if (!Tab.style) {
@@ -76,7 +76,21 @@ export class TabManager {
     this.container.appendChild(this.navbar);
     this.body = JSLib.buildElement("div", { class: "tab-body" });
     this.container.appendChild(this.body);
-    parent?.appendChild(this.container);
+    if (parent) {
+      parent.appendChild(this.container);
+      this.id = id ?? `TabManager::${JSLib.nestID(this.container)}`;
+    } else {
+      this.id = id;
+    }
+    if (this.id) {
+      let savedTab;
+      if (this.id.startsWith("TabManager::")) {
+        savedTab = window.localStorage.getItem(`${this.id}.savedTab`);
+      } else {
+        savedTab = window.localStorage.getItem(`TabManager::${this.id}.savedTab`);
+      }
+      this.savedTab = savedTab;
+    }
   }
 
   addTab(tab, index = -1) {
@@ -105,8 +119,14 @@ export class TabManager {
     //     }
     //   }
     // });
-    if (this.tabs.length === 1) {
-      this.setTab(tab.id);
+    if (this.savedTab) {
+      if (this.savedTab === tab.id) {
+        this.setTab(tab.id);
+      }
+    } else {
+      if (this.tabs.length === 1 ) {
+        this.setTab(tab.id);
+      }
     }
   }
 
@@ -148,6 +168,12 @@ export class TabManager {
       if (tab.id === tgtid) {
         this.currentTab = tgtid;
         tab.activate();
+        this.savedTab = tgtid;
+        if (this.id.startsWith("TabManager::")) {
+          window.localStorage.setItem(`${this.id}.savedTab`, tgtid);
+        } else {
+          window.localStorage.setItem(`TabManager::${this.id}.savedTab`, tgtid);
+        }
       } else {
         tab.deactivate();
       }

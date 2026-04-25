@@ -239,7 +239,6 @@ class SliceArgs {
 }
 Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
   /**
-   * 
    * @param {string} src 
    * @param {string} name
    * @param {bool} abs
@@ -366,6 +365,42 @@ Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
 
 }
 
+Asset.SubImageAsset = class SubImageAsset extends Asset.ImageAsset {
+  constructor(src, name, abs, x, y, w, h) {
+    super(src, name, abs);
+    this.subRect = new Rectangle(x, y, w, h);
+  }
+
+  get width() { return this.subRect.w; }
+  get height() { return this.subRect.h; }
+
+  /**
+   * @param {CanvasRenderingContext2D} canvas 
+   * @param {number} [clock=0] 
+   */
+  draw(canvas, clock = 0) {
+    const s = this.subRect;
+    canvas.drawImage(this.element, s.x, s.y, s.w, s.h, 0, 0, s.w, s.h);
+  }
+  /**
+   * @param {string} src 
+   * @param {string} name
+   * @param {bool} abs
+   * @param {SliceArgs} args
+   */
+  static slice(src, name, abs, args) {
+    const fw = args.frameWidth ?? args.w;
+    const fh = args.frameHeight ?? args.h;
+    const ret = [];
+    for (let y = args.initialy ?? args.y ?? 0; y < fh; y += fh + (args.gapY ?? args.dy ?? 0)) {
+      for (let x = args.initialx ?? args.x ?? 0; x < fw; x += fw + (args.gapX ?? args.dx ?? 0)) {
+        ret.push(new SubImageAsset(src, name ? `${name}_${ret.length}` : null, abs, x, y, fw, fh));
+      }
+    }
+    return ret;
+  }
+}
+
 // Load default assets so they have nice shortcuts
 new Asset.ImageAsset("enemy/enemy_base.png", "enemy_base");
 new Asset.ImageAsset("enemy/enemy_debris_1.png", "enemy_debris_1");
@@ -413,6 +448,15 @@ new Asset.AnimImageAsset(
     hSlices: 10,
     vSlices: 9
   }
+);
+new Asset.SubImageAsset(
+  "handsprites.png", "rock", false, 0, 0, 128, 128
+);
+new Asset.SubImageAsset(
+  "handsprites.png", "paper", false, 128, 0, 128, 128
+);
+new Asset.SubImageAsset(
+  "handsprites.png", "scissors", false, 0, 128, 128, 128
 );
 
 export default Asset;
