@@ -167,6 +167,10 @@ body {
 
 /* Docs */
 
+.docs-content {
+  overflow-y: scroll;
+}
+
 code {
   background-color: #272822;
   padding: 4px 1ch;
