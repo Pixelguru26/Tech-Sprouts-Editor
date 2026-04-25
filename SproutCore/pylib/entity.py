@@ -36,6 +36,7 @@ class Entity:
     this.ax = 0
     this.ay = 0
     this.world = None
+    this.hidden = False
 
     this.body = SproutCore.Geo.Circle.new(0, 0, 0)
     this.sprite = SproutCore.Asset.ImageAsset.getImage("error.png")

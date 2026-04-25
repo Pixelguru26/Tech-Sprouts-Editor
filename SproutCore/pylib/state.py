@@ -57,25 +57,25 @@ class GameState:
     """
     pass
   
-  def keydown(this, key):
+  def keyDown(this, key):
     """
     Called whenever a key is first pressed.
     Provides lowercase versions of JS key ids.
     """
     pass
-  def keyup(this, key):
+  def keyUp(this, key):
     """
     Called whenever a key is released.
     Provides lowercase versions of JS key ids.
     """
     pass
-  def mousedown(this, b, x, y):
+  def mouseDown(this, b, x, y):
     """
     Called whenever the mouse is clicked.
     Provides a lowercase version of the JS button id as b.
     """
     pass
-  def mouseup(this, b, x, y):
+  def mouseUp(this, b, x, y):
     """
     Called whenever the mouse click is released.
     Provides a lowercase version of the JS button id as b.
