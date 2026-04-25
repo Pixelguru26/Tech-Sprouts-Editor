@@ -450,13 +450,23 @@ new Asset.AnimImageAsset(
   }
 );
 new Asset.SubImageAsset(
-  "handsprites.png", "rock", false, 0, 0, 128, 128
+  "handsprites.png", "rockhand", false, 0, 0, 128, 128
 );
 new Asset.SubImageAsset(
-  "handsprites.png", "paper", false, 128, 0, 128, 128
+  "handsprites.png", "paperhand", false, 128, 0, 128, 128
 );
 new Asset.SubImageAsset(
-  "handsprites.png", "scissors", false, 0, 128, 128, 128
+  "handsprites.png", "scissorshand", false, 0, 128, 128, 128
+);
+
+new Asset.SubImageAsset(
+  "rpssprites.png", "rock", false, 0, 0, 128, 128
+);
+new Asset.SubImageAsset(
+  "rpssprites.png", "paper", false, 128, 0, 128, 128
+);
+new Asset.SubImageAsset(
+  "rpssprites.png", "scissors", false, 0, 128, 128, 128
 );
 
 export default Asset;

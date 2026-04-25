@@ -1,5 +1,6 @@
 import SproutCore
 from pylib.entity import Entity
+from pylib.uientity import UIEntity
 from pylib.autoutil import AutoUpdateUtil
 from pylib.state import GameState
 
