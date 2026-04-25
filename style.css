@@ -102,7 +102,7 @@ body {
 .console-container {
   display: flex;
   flex-direction: column;
-  height: 50%;
+  height: 30%;
   overflow: hidden;
   background-color: #272822;
 }
