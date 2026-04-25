@@ -169,6 +169,7 @@ body {
 
 .docs-content {
   overflow-y: scroll;
+  max-height: 100%;
 }
 
 code {
