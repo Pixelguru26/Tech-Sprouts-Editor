@@ -115,9 +115,28 @@ export function codeblock(text) {
   }
   if (text[0].length <= 1) text.shift(); // Clean leading lines from formatting
   text = text.join('\n');
+
+  // Construct final element tree
   let ret = JSLib.build([
-    "code", {}, [
-      ["pre", { textContent: text }]
+    "code", { style: {
+      position: "relative"
+    }}, [
+      ["pre", { textContent: text }],
+      ["div", { class: "code-copy-button prevent-select", style: {
+        position: "absolute",
+        top: "2px",
+        right: "8px"
+      }, onclick: (evt) => {
+        navigator.clipboard.writeText(text).then(function () {
+          console.log('Async: Copy to clipboard was successful!');
+          evt.target.textContent = "Copied!";
+          setTimeout(() => {
+            evt.target.textContent = "Copy";
+          }, 3000);
+        }, function (err) {
+          console.error('Async: Could not copy text: ', err);
+        });
+      }}, "Copy"]
     ]
   ]);
   ret.classList.add("codeblock");

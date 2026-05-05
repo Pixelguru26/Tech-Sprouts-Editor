@@ -28,6 +28,20 @@ body {
   user-select: none;
 }
 
+.code-copy-button {
+  background-color: #3d3f36;
+  color: white;
+  padding: 0px 6px;
+  border-radius: 4px;
+  border: none;
+  margin: 2px;
+  cursor: pointer;
+  &:active {
+    background-color: #33352d;
+    box-shadow: 0 2px black inset;
+  }
+}
+
 .button {
   background-color: #122D1E;
   color: white;
