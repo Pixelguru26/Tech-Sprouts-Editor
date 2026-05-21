@@ -2,61 +2,6 @@ import Asset from "./asset.js";
 
 const deg = Math.PI / 180;
 
-class GLSystem {
-  constructor(gl) {
-    /** @type {WebGLRenderingContext} */
-    this.cl = gl;
-  }
-
-  init() {
-    let gl = this.cl;
-    gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    this.vertexShader = this.loadShader(gl, gl.VERTEX_SHADER, SproutCore.vsSource);
-    this.fragShader = this.loadShader(gl, gl.FRAGMENT_SHADER, SproutCore.fsSource);
-    this.clProgram = gl.createProgram();
-    gl.attachShader(this.clProgram, this.vertexShader);
-    gl.attachShader(this.clProgram, this.fragShader);
-    gl.linkProgram(this.clProgram);
-    if (!gl.getProgramParameter(this.clProgram, gl.LINK_STATUS)) {
-      alert("WebGL program initialization failed. System cannot run.");
-      return;
-    }
-
-    this.vertexLocation = gl.getAttribLocation(this.clProgram, "aVertexPosition");
-    this.projMatrixLocation = gl.getUniformLocation(this.clProgram, "uProjectionMatrix");
-    this.mviewMatrixLocation = gl.getUniformLocation(this.clProgram, "uModelViewMatrix");
-  }
-
-  loadShader(gl, type, src) {
-    // const gl = this.cl;
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, src);
-    gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      alert("WebGL shader compilation failed. System cannot run.");
-      let err = gl.getShaderInfoLog(shader);
-      gl.deleteShader(shader);
-      throw new Error(`webgl shader compilation error: ${err}`);
-    }
-    return shader;
-  }
-
-  static vsSource = `
-    attribute vec4 aVertexPosition;
-    uniform mat4 uModelViewMatrix;
-    uniform mat4 uProjectionMatrix;
-    void main() {
-      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-    }
-  `;
-  static fsSource = `
-    void main() {
-      gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-    }
-  `;
-}
-
 export default class Graphics {
   /**
    * @param {number} width
@@ -68,12 +13,20 @@ export default class Graphics {
     /** @type {CanvasRenderingContext2D} */
     this.canvasContext = null;
     this.resizeReceivers = [];
+    this.backCanvas = document.createElement("canvas");
+    this.backCanvas.width = width;
+    this.backCanvas.height = height;
+    this.backCanvas.style.display = "none";
+    document.body.appendChild(this.backCanvas);
   }
-
+  
   bindCanvasContext(ctx) {
     this.canvasContext = ctx;
     this.width = ctx.canvas.width;
     this.height = ctx.canvas.height;
+    this.backCanvasContext = this.backCanvas.getContext("2d");
+    this.backCanvas.width = this.width;
+    this.backCanvas.height = this.height;
   }
 
   addEventListener(eventType, listener) {

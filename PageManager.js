@@ -58,7 +58,15 @@ export default class PageManager {
     // Initialize and link SproutCore
     this.sproutCore = SproutCore;
     this.sproutCore.graphics.bindCanvasContext(gameCanvas.getContext("2d"));
-    this.sproutCore.graphics.fillCanvas("black");
+    this.sproutCore.graphics.addEventListener("resize", (w, h, ow, oh) => {
+      gameUI.style.width = w + "px";
+      gameUI.style.height = h + "px";
+    });
+    // this.sproutCore.graphics.fillCanvas("black");
+    this.sproutCore.graphics.backCanvasContext.fillStyle = "black";
+    this.sproutCore.graphics.backCanvasContext.fillRect(0, 0, this.sproutCore.graphics.backCanvas.width, this.sproutCore.graphics.backCanvas.height);
+    this.sproutCore.graphics.backCanvasContext.fillStyle = "white";
+    this.sproutCore.graphics.backCanvasContext.fillRect(10, 10, 100, 100);
     // Link console
     this.sproutCore.addEventListener("print", (str) => {
       this.console.print(str);
