@@ -3,27 +3,24 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>SproutCore Engine</title>
+    <title>Test Page</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href='./Libs/dockview.min.css'> <!-- from "https://cdn.jsdelivr.net/npm/dockview@6.3.0/dist/styles/dockview.min.css" as of 05/22/2026 -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.37.1/ace.js"
       integrity="sha512-qLBIClcHlfxpnqKe1lEJQGuilUZMD+Emm/OVMPgAmU2+o3+R5W7Tq2Ov28AZqWqZL8Jjf0pJHQZbxK9B9xMusA=="
       crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ace-builds@1.37.5/css/ace.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
-      integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
-      crossorigin="anonymous" defer>
-    </script>
-    <link rel="stylesheet" href="./style.css" />
-    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="stylesheet" href="./style.css">
   </head>
-  <body>
-    <div id="assets" style="display: none;">
-    <script type="module">
-      import PageManager from "./PageManager.js";
-      let pageManager = new PageManager(document.body);
-    </script>
+  <body style="padding: 0; margin: 0; width: 100vw; height: 100vh;">
+    <div id="app" style="width: 100vw; height: 100vh;"></div>
+    <div id="assets" style="display: none">
+      <script type="module">
+        import PageManager from "./PageManager.js";
+        const pageManager = new PageManager(document.getElementById("app"));
+      </script>
     </div>
   </body>
 </html>
