@@ -52,7 +52,7 @@ const SproutCoreClass = class SproutCore {
     if (!this.eventListeners[eventType]) {
       this.eventListeners[eventType] = [];
     } else if (eventType === "setui") {
-      throw new Error("Cannot have connect multiple ui receivers.");
+      throw new Error("Cannot connect multiple ui receivers.");
     }
     this.eventListeners[eventType].push(listener);
   }
@@ -158,6 +158,11 @@ const SproutCoreClass = class SproutCore {
     this.graphics.bindCanvasContext(ctx);
   }
 
+  resize(w, h) {
+    this.graphics.resize(w, h);
+    this.callPyEvent("resize", w, h);
+  }
+
   keyDown(evt) {
     if (!evt.repeat) {
       if (evt.key === 'p' && evt.ctrlKey) {
@@ -244,7 +249,7 @@ const SproutCoreClass = class SproutCore {
         this.publishEvent("pyodideLoaded", this.py);
 
         // Load main python code
-        this.py.FS.writeFile("/home/pyodide/main.py", PrePy + (window.localStorage.getItem("./main.py") ?? "") + PostPy);
+        this.py.FS.writeFile("/home/pyodide/main.py", PrePy + (window.localStorage.getItem("FILE-./main.py") ?? "") + PostPy);
         await (async () => {
           this.userpy = this.py.pyimport("main");
         })();
@@ -279,7 +284,8 @@ const SproutCoreClass = class SproutCore {
           if (dt !== 0) {
             // Need to investigate why 0 delay frames are happening.
             this.callPyEvent("update", dt);
-            this.graphics.fillCanvas("black");
+            // this.graphics.fillCanvas("black");
+            this.graphics.canvasContext?.drawImage(this.graphics.backCanvas, 0, 0);
             this.callPyEvent("draw");
           }
 

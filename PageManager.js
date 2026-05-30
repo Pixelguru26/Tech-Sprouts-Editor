@@ -1,23 +1,41 @@
-import { TabManager, Tab } from './Tabs/TabManager.js';
+import * as dockview from "https://cdn.jsdelivr.net/npm/dockview@6.3.0/+esm";
+document.dockview = dockview;
+
+import DocsData from "./Tabs/docs.js";
+import JSLib from "./SproutCore/lib.js";
+import Editor from "./Tabs/code.js";
 import ConsoleManager from "./Tabs/console.js";
-import JSLib from './SproutCore/lib.js';
-import DocsData from './Tabs/docs.js';
-import Editor from './Tabs/code.js';
-import SproutCore from './SproutCore/core.js';
+import SproutCore from "./SproutCore/core.js";
+
+import { Tab, Panel, HeaderPlayButtonComponent, HeaderLogoComponent } from "./Tabs/DockviewComponents.js";
 
 export default class PageManager {
   constructor(container) {
     this.container = container;
-    this.tabs = new TabManager(container);
+    this.api = dockview.createDockview(
+      container, {
+        theme: dockview.themeAbyss,
+        createComponent: (options) => new Panel(options),
+        createTabComponent: (options) => new Tab(options),
+        createPrefixHeaderActionComponent: (group) => new HeaderLogoComponent(group),
+        createRightHeaderActionComponent: (group) => new HeaderPlayButtonComponent(group)
+      }
+    );
+    
+    // ==========================================
+    // DOCUMENTATION
+    // ==========================================
+    this.docsPanel = this.api.addPanel({
+      id: "docs", title: "Documentation",
+      component: "default", tabComponent: "default",
+      params: {
+        contents: DocsData
+      }
+    });
 
-    // Docs tab
-    let docscontent = JSLib.buildElement("div", { class: "docs-content" });
-    docscontent.append(...DocsData);
-    this.tabs.addTab(new Tab(
-      "docs", "Documentation", docscontent
-    ));
-
-    // Game tab
+    // ==========================================
+    // GAME CANVAS
+    // ==========================================
     let gameCanvas = JSLib.buildElement("canvas", {
       class: "game-canvas",
       width: 900,
@@ -30,36 +48,72 @@ export default class PageManager {
         height: "600px"
       }
     });
-    this.tabs.addTab(new Tab(
-      "game", "Game", JSLib.build([
-        "div", {
-          class: "centercontainer",
-          style: { height: "100%" }
-        },
-        gameCanvas,
-        [
+    this.gamePanel = this.api.addPanel({
+      id: "game", title: "Game",
+      component: "default", tabComponent: "default",
+      params: {
+        contents: [JSLib.build([
+          // Centering container for game screen
           "div", {
-            style: { position: "absolute" }
+            class: "centercontainer",
+            style: { height: "100%" }
           },
-          gameUI
-        ]
-      ])
-    ));
+          // Elements in container
+          gameCanvas,
+          [ // Container div for UI, required to overlay on top of canvas
+            "div", {
+              style: { position: "absolute" }
+            }, gameUI
+          ]
+        ])]
+      }
+    });
 
-    // Code tab
-    let editor = new Editor("./main.py");
-    editor.loadOrDefault("# from pylib.games.shooter import game");
-    this.tabs.addTab(new Tab("code", "Code", editor.editorElement));
+    // ==========================================
+    // EDITOR
+    // ==========================================
+    let editor = new Editor();
+    this.codePanel = this.api.addPanel({
+      id: "code", title: "Code",
+      component: "default", tabComponent: "default",
+      params: {
+        contents: [editor.editorElement]
+      }
+    });
     editor.init();
+    let storagePath = "FILE-./main.py";
+    let text = window.localStorage.getItem(storagePath);
+    if (text === null) {
+      window.localStorage.setItem(storagePath, "# from pylib.games.shooter import game");
+    }
+    editor.open(null, "./main.py");
 
-    // Initialize console
-    this.console = new ConsoleManager(this.tabs.body);
+    // ==========================================
+    // CONSOLE
+    // ==========================================
+    let consoleElement = JSLib.buildElement("div", {style: {
+      width: "100%", height: "100%"
+    }});
+    this.console = new ConsoleManager(consoleElement);
+    this.consolePanel = this.api.addPanel({
+      id: "console", title: "Console",
+      component: "default", tabComponent: "default",
+      position: { referencePanel: "game", direction: "below" },
+      params: {
+        contents: [consoleElement]
+      }
+    });
 
-    // Initialize and link SproutCore
+    // ==========================================
+    // FUNCTIONALITY
+    // ==========================================
     this.sproutCore = SproutCore;
     this.sproutCore.graphics.bindCanvasContext(gameCanvas.getContext("2d"));
-    this.sproutCore.graphics.fillCanvas("black");
-    // Link console
+    
+    // Console input requests waiting
+    // Prevents engine commands from interfering with Python input requests
+    let requestQue = 0;
+
     this.sproutCore.addEventListener("print", (str) => {
       this.console.print(str);
     });
@@ -72,71 +126,66 @@ export default class PageManager {
     this.sproutCore.addEventListener("setui", (...elements) => {
       gameUI.replaceChildren(...elements);
     });
-    document.addEventListener("keydown", (evt) => {this.sproutCore.keyDown(evt);});
-    document.addEventListener("keyup", (evt) => {this.sproutCore.keyUp(evt);});
-    document.addEventListener("mousedown", (evt) => {this.sproutCore.mouseDown(evt);});
-    document.addEventListener("mouseup", (evt) => {this.sproutCore.mouseUp(evt);});
 
-    // Custom controls
-    // Start/stop button
-    this.playButton = JSLib.build([
-      "i", {
-        id: "game-play-button",
-        class: "fa fa-play refresh-button animated",
+    // Resizing
+    const layoutChange = () => {
+      // Resize game canvas bounds
+      const bounds = this.gamePanel.view.content.element.getBoundingClientRect();
+      let w = bounds.width;
+      let h = bounds.height;
+      if (w !== gameCanvas.width || h !== gameCanvas.height) {
+        gameCanvas.width = w;
+        gameCanvas.height = h;
+        gameUI.style.width = ("width", w + "px");
+        gameUI.style.height = ("height", h + "px");
+        /** @type {CanvasRenderingContext2D} */
+        let ctx = gameCanvas.getContext("2d");
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+        this.sproutCore.resize(w, h);
       }
-    ], this.tabs.navbar);
-    let lock = false;
-    let requestQue = 0;
-    this.playButton.addEventListener("click", (evt) => {
-      if (!lock) {
-        lock = true;
-        if (this.sproutCore.running) {
-          // Stop the game
-          this.sproutCore.running = false;
-          this.setPlayButtonState(false, true);
-        } else {
-          // Start the game, indicate loading
-          this.setPlayButtonState(false, true);
-          this.sproutCore.run();
-        }
-        lock = false;
+    };
+    this.api.onDidLayoutChange(layoutChange);
+    setTimeout(layoutChange, 0);
+    
+    HeaderPlayButtonComponent.addEventListener((start) => {
+      HeaderPlayButtonComponent.locked = true;
+      if (start) {
+        this.sproutCore.run();
+      } else {
+        this.sproutCore.running = false;
       }
+      HeaderPlayButtonComponent.locked = false;
     });
     this.sproutCore.addEventListener("gameStarted", () => {
-      this.setPlayButtonState(false, false);
+      HeaderPlayButtonComponent.start();
     });
     this.sproutCore.addEventListener("gameStopped", () => {
-      this.setPlayButtonState(true, false);
+      HeaderPlayButtonComponent.stop();
       requestQue = 0;
       this.console.clearInputEventListeners();
     });
 
-    // Console input
     this.sproutCore.requestInput = async (prompt) => {
       requestQue++;
       let ret = await this.console.awaitInput(prompt);
-      consmode--; // what exactly is this?
+      requestQue--;
       return ret;
     }
+
+    // Engine console commands
     this.console.addInputEventListener((str) => {
+      // Prevent engine commands from interfering with Python input requests
       if (requestQue === 0) {
         if (["clear", "cls"].includes(str.toLowerCase())) {
           this.console.clear();
         }
       }
     });
-  }
-  setPlayButtonState(run = false, animated = false) {
-    if (this.playButton) {
-      if (run) {
-        this.playButton.classList.remove("fa-stop");
-        this.playButton.classList.add("fa-play");
-      } else {
-        this.playButton.classList.remove("fa-play");
-        this.playButton.classList.add("fa-stop");
-      }
-      if (animated) this.playButton.classList.add("animated");
-      else this.playButton.classList.remove("animated");
-    }
+
+    document.addEventListener("keydown", (evt) => { this.sproutCore.keyDown(evt); });
+    document.addEventListener("keyup", (evt) => { this.sproutCore.keyUp(evt); });
+    document.addEventListener("mousedown", (evt) => { this.sproutCore.mouseDown(evt); });
+    document.addEventListener("mouseup", (evt) => { this.sproutCore.mouseUp(evt); });
   }
 }

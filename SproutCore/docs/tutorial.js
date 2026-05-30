@@ -10,6 +10,9 @@ const div = lib.div;
 const br = lib.br;
 
 import rpsPy from "../pylib/games/rps.py.js";
+import caesarPy from "../pylib/demos/caesar.py.js";
+import bellassoPy from "../pylib/demos/bellasso.py.js";
+import palindromePy from "../pylib/demos/palindrome.py.js";
 
 export default section(
   "tutorial", "Tutorials",
@@ -565,6 +568,16 @@ export default section(
       or simply used as reference material.
     `),
     codeblock(rpsPy)
+  ),
+  section("tutorial6", "Cryptography",
+    html(`Caesar Cipher<br>
+      Todo: Caesar Cipher lesson
+    `),
+    codeblock(caesarPy),
+    html(`Vingenére Cipher<br>
+      Todo: Vingenere cipher lesson
+    `),
+    codeblock(bellassoPy)
   )
   // section("tutorial5", "Level 5",
   //   codeblock(`

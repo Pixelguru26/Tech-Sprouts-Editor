@@ -2,61 +2,6 @@ import Asset from "./asset.js";
 
 const deg = Math.PI / 180;
 
-class GLSystem {
-  constructor(gl) {
-    /** @type {WebGLRenderingContext} */
-    this.cl = gl;
-  }
-
-  init() {
-    let gl = this.cl;
-    gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    this.vertexShader = this.loadShader(gl, gl.VERTEX_SHADER, SproutCore.vsSource);
-    this.fragShader = this.loadShader(gl, gl.FRAGMENT_SHADER, SproutCore.fsSource);
-    this.clProgram = gl.createProgram();
-    gl.attachShader(this.clProgram, this.vertexShader);
-    gl.attachShader(this.clProgram, this.fragShader);
-    gl.linkProgram(this.clProgram);
-    if (!gl.getProgramParameter(this.clProgram, gl.LINK_STATUS)) {
-      alert("WebGL program initialization failed. System cannot run.");
-      return;
-    }
-
-    this.vertexLocation = gl.getAttribLocation(this.clProgram, "aVertexPosition");
-    this.projMatrixLocation = gl.getUniformLocation(this.clProgram, "uProjectionMatrix");
-    this.mviewMatrixLocation = gl.getUniformLocation(this.clProgram, "uModelViewMatrix");
-  }
-
-  loadShader(gl, type, src) {
-    // const gl = this.cl;
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, src);
-    gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      alert("WebGL shader compilation failed. System cannot run.");
-      let err = gl.getShaderInfoLog(shader);
-      gl.deleteShader(shader);
-      throw new Error(`webgl shader compilation error: ${err}`);
-    }
-    return shader;
-  }
-
-  static vsSource = `
-    attribute vec4 aVertexPosition;
-    uniform mat4 uModelViewMatrix;
-    uniform mat4 uProjectionMatrix;
-    void main() {
-      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-    }
-  `;
-  static fsSource = `
-    void main() {
-      gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-    }
-  `;
-}
-
 export default class Graphics {
   /**
    * @param {number} width
@@ -68,12 +13,23 @@ export default class Graphics {
     /** @type {CanvasRenderingContext2D} */
     this.canvasContext = null;
     this.resizeReceivers = [];
+    this.backCanvas = document.createElement("canvas");
+    this.backCanvas.width = width;
+    this.backCanvas.height = height;
+    this.backCanvas.style.display = "none";
+    document.body.appendChild(this.backCanvas);
   }
-
+  
   bindCanvasContext(ctx) {
     this.canvasContext = ctx;
     this.width = ctx.canvas.width;
     this.height = ctx.canvas.height;
+    this.backCanvasContext = this.backCanvas.getContext("2d");
+    this.backCanvas.width = this.width;
+    this.backCanvas.height = this.height;
+    this.backCanvasContext.resetTransform();
+    this.backCanvasContext.fillStyle = "black";
+    this.backCanvasContext.fillRect(0, 0, this.width, this.height);
   }
 
   addEventListener(eventType, listener) {
@@ -104,7 +60,8 @@ export default class Graphics {
   }
 
   /**
-   * Attempts to resize the bound canvas to the specified dimensions.
+   * Notifies the graphics library of a canvas resize
+   * and updates the back canvas if necessary.
    * @param {number} width 
    * @param {number} height 
    */
@@ -113,10 +70,29 @@ export default class Graphics {
     let oldHeight = this.height;
     this.width = width;
     this.height = height;
-    if (this.canvasContext) {
-      this.canvasContext.canvas.width = width;
-      this.canvasContext.canvas.height = height;
+    // Expand back canvas as necessary to cover full screen size
+    // To avoid loss of contents, does not shrink
+    if (width > this.backCanvas.width || height > this.backCanvas.height) {
+      // Construct new back canvas
+      let newBackCanvas = document.createElement("canvas");
+      newBackCanvas.width = Math.max(oldWidth, width);
+      newBackCanvas.height = Math.max(oldHeight, height);
+      newBackCanvas.style.display = "none";
+      document.body.appendChild(newBackCanvas);
+      this.backCanvasContext = newBackCanvas.getContext("2d");
+      // Clear new back canvas
+      this.backCanvasContext.fillStyle = "black";
+      this.backCanvasContext.fillRect(0, 0, newBackCanvas.width, newBackCanvas.height);
+      // Transfer contents from old canvas
+      this.backCanvasContext.drawImage(this.backCanvas, 0, 0);
+      // Swap new canvas into place
+      this.backCanvas.remove(); // Todo: test to ensure this is disposed properly
+      this.backCanvas = newBackCanvas;
     }
+    // if (this.canvasContext) {
+    //   this.canvasContext.canvas.width = width;
+    //   this.canvasContext.canvas.height = height;
+    // }
     this.publishEvent("resize", width, height, oldWidth, oldHeight);
   }
 

@@ -1,13 +1,12 @@
 import JSLib from "../SproutCore/lib.js";
 
 export default class Editor {
-  static lastid = 0;
-  #stopThread = null;
+  #stopThread = null; // Current function to interrupt the autosave thread. Updated each time autosave cycles.
 
-  constructor(path = null, defaultValue = "") {
-    this.defaultValue = defaultValue;
-    this.editorElement = JSLib.buildElement("div", {class: "editor-container"});
-
+  constructor() {
+    this.editorElement = JSLib.buildElement("div", {
+      class: "editor-container"
+    });
     this.editor = ace.edit(this.editorElement, {
       mode: "ace/mode/python",
       theme: "ace/theme/monokai",
@@ -18,22 +17,19 @@ export default class Editor {
       scrollPastEnd: 1
     });
 
-    /** @type {string} Current autosave path. Defaults to "./autosave-#.txt" with unique #. */
-    this.path = path ?? `./autosave-${Editor.lastid++}.txt`;
+    /** @type {string} */
+    this.path = null;
     /** @type {number} Autosave interval in seconds. */
     this.saveInterval = 1;
 
     this.timeStamp = Date.now();
     this.dirty = false;
-
-    // Add event to mark editor for saving
     this.editor.addEventListener("change", (delta) => {
       this.markDirty();
     });
   }
 
   init() {
-    this.loadOrDefault(this.defaultValue);
     this.startAutoSave();
   }
 
@@ -41,18 +37,20 @@ export default class Editor {
     this.stopAutoSave();
     // Create save thread
     this.autoSaveThread = (async () => {
-      // Declared here to ensure multiple threads cannot run simultaneously.
       let running = true;
       while (running) {
-        if (this.dirty && Date.now() > (this.timeStamp + this.saveInterval * 1000)) {
-          this.autoSave();
+        if (this.path !== null && this.dirty) {
+          if (Date.now() > (this.timeStamp + this.saveInterval * 1000)) {
+            this.autoSave();
+          }
         }
         await new Promise(r => {
+          // Ensure thread abort is always up to date
           this.#stopThread = () => {
             running = false;
             r();
           };
-          setTimeout(r, this.saveInterval * 1000)
+          setTimeout(r, this.saveInterval * 1000);
         });
       }
     })();
@@ -68,20 +66,18 @@ export default class Editor {
   }
 
   autoSave() {
-    window.localStorage.setItem(this.path, this.editor.getValue());
+    // Todo: integrate with Pyodide file system
+    // Or perhaps not? I just remembered that the game fetches local storage "files" into Pyodide as needed. This might be sufficient.
+    if (this.path !== null) {
+      window.localStorage.setItem(`FILE-${this.path}`, this.editor.getValue());
+    }
     this.dirty = false;
     this.timeStamp = Date.now();
   }
 
-  loadOrDefault(defaultValue = "") {
-    let save = window.localStorage.getItem(this.path);
-    if (save && save !== "") {
-      this.editor.setValue(save);
-      this.dirty = false;
-      this.timeStamp = Date.now();
-    } else {
-      this.editor.setValue(defaultValue);
-      this.autoSave();
-    }
+  open(py, path) {
+    this.path = path;
+    let text = window.localStorage.getItem(`FILE-${this.path}`);
+    this.editor.setValue(text);
   }
 }
