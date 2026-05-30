@@ -1,7 +1,6 @@
 * {
   box-sizing: border-box;
 }
-
 html, body {
   height: 100vh;
   width: 100vw;
@@ -12,7 +11,6 @@ html, body {
   color: whitesmoke;
   overflow: hidden;
 }
-
 body {
   display: flex;
   flex-direction: column;
@@ -26,20 +24,6 @@ body {
   -ms-user-select: none;
   /* Standard syntax */
   user-select: none;
-}
-
-.code-copy-button {
-  background-color: #3d3f36;
-  color: white;
-  padding: 0px 6px;
-  border-radius: 4px;
-  border: none;
-  margin: 2px;
-  cursor: pointer;
-  &:active {
-    background-color: #33352d;
-    box-shadow: 0 2px black inset;
-  }
 }
 
 .button {
@@ -56,17 +40,15 @@ body {
   white-space: nowrap;
   margin-top: 2px;
   margin-bottom: 2px;
-}
-
-.button:hover {
-  background-color: #1C4D3D;
-}
-
-.button:active {
-  padding: 8px 18px 4px 18px;
-  background-color: #122D1E;
-  color: lightslategrey;
-  box-shadow: 0 2px #07150D inset;
+  &:hover {
+    background-color: #1C4D3D;
+  }
+  &:active {
+    padding: 8px 18px 4px 18px;
+    background-color: #122D1E;
+    color: lightslategrey;
+    box-shadow: 0 2px #07150D inset;
+  }
 }
 
 .navbar {
@@ -83,6 +65,27 @@ body {
   }
 }
 
+.dockview-theme-abyss {
+  --dv-tabs-and-actions-container-background-color: #122 !important;
+  --dv-group-view-background-color: darkslategray !important;
+  --dv-activegroup-visiblepanel-tab-background-color: darkslategray !important;
+  --dv-activegroup-hiddenpanel-tab-background-color: #233 !important;
+  --dv-inactivegroup-visiblepanel-tab-background-color: darkslategray !important;
+  --dv-inactivegroup-hiddenpanel-tab-background-color: #233 !important;
+  --dv-border-radius: 5px !important;
+  --dv-tab-border-radius: 5px !important;
+  --dv-sash-border-radius: 5px !important;
+  --dv-spacing-padding: 0px !important;
+}
+.dv-tab {
+  border-radius: 5px 5px 0 0;
+  padding: 4px 2ch 4px 2ch;
+  margin: 4px 2px 0 2px;
+}
+.dv-header {
+  margin-top: auto;
+  margin-bottom: auto;
+}
 
 .window {
   background-color: darkslategray;
@@ -108,6 +111,7 @@ body {
   display: none !important;
 }
 
+/* Console */
 
 #tab-cons {
   display: flex;
@@ -116,7 +120,7 @@ body {
 .console-container {
   display: flex;
   flex-direction: column;
-  height: 30%;
+  height: 100%;
   overflow: hidden;
   background-color: #272822;
 }
@@ -185,30 +189,39 @@ body {
   overflow-y: scroll;
   max-height: 100%;
 }
-
 code {
   background-color: #272822;
   padding: 4px 1ch;
   line-height: 2;
   border-radius: 5px;
   transition: all .5s;
+  &:hover {
+    scale: 1.01;
+    box-shadow: 0px 4px 8px inset #00000050;
+  }
 }
-
-code:hover {
-  scale: 1.01;
-  box-shadow: 0px 4px 8px inset #00000050;
-}
-
 .codeblock {
   display: block;
   margin: 2px;
+}
+.code-copy-button {
+  background-color: #3d3f36;
+  color: white;
+  padding: 0px 6px;
+  border-radius: 4px;
+  border: none;
+  margin: 2px;
+  cursor: pointer;
+  &:active {
+    background-color: #33352d;
+    box-shadow: 0 2px black inset;
+  }
 }
 
 li {
   padding-top: 1ch;
   padding-bottom: 1ch;
 }
-
 details {
   margin: 8px;
   border-radius: 5px;
@@ -216,40 +229,34 @@ details {
   box-shadow: 0px 4px 4px #07150D;
   padding: 4px;
   transition: all .5s;
-}
-
-details:hover {
-  /* background-color: #07150D40; */
-  box-shadow: 0px 8px 8px #07150DA0;
-}
-
-/* Indents contents in each nested block */
-details>:not(summary, details, jse-docfn) {
-  padding-left: 2ch;
-}
-
-details>*+ul,
-details>*+ol {
-  margin-left: 4ch;
-}
-
-details>summary {
-  font-size: 1.5em;
-  font-weight: bold;
-  /* Safari */
-  -webkit-user-select: none;
-  /* IE 10 and IE 11 */
-  -ms-user-select: none;
-  /* Standard syntax */
-  user-select: none;
-}
-
-details>details>summary {
-  font-size: 1.33em;
-}
-
-details>details>details summary {
-  font-size: 1.17em;
+  &:hover {
+    /* background-color: #07150D40; */
+    box-shadow: 0px 8px 8px #07150DA0;
+  }
+  /* Header level sizing */
+  &>summary {
+    font-size: 1.5em;
+    font-weight: bold;
+    /* Safari */
+    -webkit-user-select: none;
+    /* IE 10 and IE 11 */
+    -ms-user-select: none;
+    /* Standard syntax */
+    user-select: none;
+  }
+  &>details>summary {
+    font-size: 1.33em;
+  }
+  &>details>details summary {
+    font-size: 1.17em;
+  }
+  /* Indents contents in each nested block */
+  &>:not(summar, details, jse-docfn) {
+    padding-left: 2ch;
+  }
+  &>*+ul, &>*+ol {
+    margin-left: 4ch;
+  }
 }
 
 ::selection {
@@ -262,20 +269,19 @@ details>details>details summary {
 .disabled {
   color: #757770;
 }
-
 *:link {
   color: white;
   text-shadow: 0 0 4px white;
 }
-
 *:visited {
   color: white;
 }
-
 .editor-container {
   width: 100%;
   height: 100%;
 }
+
+/* Play button */
 
 @keyframes pulsate {
   0% {

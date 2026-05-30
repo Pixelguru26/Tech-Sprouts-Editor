@@ -294,6 +294,12 @@ const JSLib = class JSLib {
     }
     return path.join('/');
   }
+
+  static sleep(seconds) {
+    return new Promise(r => {
+      setTimeout(r, seconds * 1000);
+    });
+  }
 };
 
 

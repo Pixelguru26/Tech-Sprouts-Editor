@@ -4,6 +4,7 @@ import JSLib from './SproutCore/lib.js';
 import DocsData from './Tabs/docs.js';
 import Editor from './Tabs/code.js';
 import SproutCore from './SproutCore/core.js';
+// import Styles from './styles.css.js' with { type: "css" };
 
 export default class PageManager {
   constructor(container) {
@@ -123,7 +124,7 @@ export default class PageManager {
     this.sproutCore.requestInput = async (prompt) => {
       requestQue++;
       let ret = await this.console.awaitInput(prompt);
-      consmode--; // what exactly is this?
+      // consmode--; // what exactly is this?
       return ret;
     }
     this.console.addInputEventListener((str) => {

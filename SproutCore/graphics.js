@@ -27,6 +27,9 @@ export default class Graphics {
     this.backCanvasContext = this.backCanvas.getContext("2d");
     this.backCanvas.width = this.width;
     this.backCanvas.height = this.height;
+    this.backCanvasContext.resetTransform();
+    this.backCanvasContext.fillStyle = "black";
+    this.backCanvasContext.fillRect(0, 0, this.width, this.height);
   }
 
   addEventListener(eventType, listener) {
@@ -57,7 +60,8 @@ export default class Graphics {
   }
 
   /**
-   * Attempts to resize the bound canvas to the specified dimensions.
+   * Notifies the graphics library of a canvas resize
+   * and updates the back canvas if necessary.
    * @param {number} width 
    * @param {number} height 
    */
@@ -66,10 +70,29 @@ export default class Graphics {
     let oldHeight = this.height;
     this.width = width;
     this.height = height;
-    if (this.canvasContext) {
-      this.canvasContext.canvas.width = width;
-      this.canvasContext.canvas.height = height;
+    // Expand back canvas as necessary to cover full screen size
+    // To avoid loss of contents, does not shrink
+    if (width > this.backCanvas.width || height > this.backCanvas.height) {
+      // Construct new back canvas
+      let newBackCanvas = document.createElement("canvas");
+      newBackCanvas.width = Math.max(oldWidth, width);
+      newBackCanvas.height = Math.max(oldHeight, height);
+      newBackCanvas.style.display = "none";
+      document.body.appendChild(newBackCanvas);
+      this.backCanvasContext = newBackCanvas.getContext("2d");
+      // Clear new back canvas
+      this.backCanvasContext.fillStyle = "black";
+      this.backCanvasContext.fillRect(0, 0, newBackCanvas.width, newBackCanvas.height);
+      // Transfer contents from old canvas
+      this.backCanvasContext.drawImage(this.backCanvas, 0, 0);
+      // Swap new canvas into place
+      this.backCanvas.remove(); // Todo: test to ensure this is disposed properly
+      this.backCanvas = newBackCanvas;
     }
+    // if (this.canvasContext) {
+    //   this.canvasContext.canvas.width = width;
+    //   this.canvasContext.canvas.height = height;
+    // }
     this.publishEvent("resize", width, height, oldWidth, oldHeight);
   }
 
