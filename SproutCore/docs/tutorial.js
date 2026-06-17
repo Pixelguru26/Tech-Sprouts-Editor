@@ -13,6 +13,9 @@ import rpsPy from "../pylib/games/rps.py.js";
 import caesarPy from "../pylib/demos/caesar.py.js";
 import bellassoPy from "../pylib/demos/bellasso.py.js";
 import palindromePy from "../pylib/demos/palindrome.py.js";
+import squarePy from "../pylib/demos/square.py.js";
+import spirographPy from "../pylib/demos/spirograph.py.js";
+import activeSpirographPy from "../pylib/demos/activespirograph.py.js";
 
 export default section(
   "tutorial", "Tutorials",
@@ -578,6 +581,14 @@ export default section(
       Todo: Vingenere cipher lesson
     `),
     codeblock(bellassoPy)
+  ),
+  section("tutorial7", "Turtle",
+    html(`Turtle Graphics<br>
+      Todo: Turtle graphics lesson
+    `),
+    codeblock(squarePy),
+    codeblock(spirographPy),
+    codeblock(activeSpirographPy)
   )
   // section("tutorial5", "Level 5",
   //   codeblock(`

@@ -242,7 +242,7 @@ class Entity:
   # Moves the entity forward by the specified number of pixels.
   def forward(this, distance = 1):
     rad = this.angle / 180 * pi
-    if (this.collisionType == "line"):
+    if (this.collision_type == "line"):
       # The default implementation for line segments
       # moves the entire line segment. Projectiles use a custom override.
       this.body.ax += cos(rad) * distance
@@ -259,7 +259,7 @@ class Entity:
   # Moves the entity 90° clockwise from its facing direction by the specified number of pixels.
   def right(this, distance = 1):
     rad = (this.angle + 90) / 180 * pi
-    if (this.collisionType == "line"):
+    if (this.collision_type == "line"):
       # The default implementation for line segments
       # moves the entire line segment. Projectiles use a custom override.
       this.body.ax += cos(rad) * distance

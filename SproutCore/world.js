@@ -10,6 +10,7 @@ export default class GameWorld {
     // Gravity in px/(s^2)
     this.gravityX = 0;
     this.gravityY = 100;
+    this.isUpdating = false;
   }
 
   new() { return new GameWorld(); }
@@ -54,6 +55,7 @@ export default class GameWorld {
   }
 
   update(dt) {
+    this.isUpdating = true;
     let entq = this.entityque;
     let bulq = this.bulletque;
     let ents = this.entities;
@@ -158,9 +160,11 @@ export default class GameWorld {
         throw new Error(`Error on disposal of bullet #${i}`, { cause: e });
       }
     }
+    this.isUpdating = false;
   }
 
   draw() {
+    this.isUpdating = true;
     let ents = this.entities;
     let buls = this.bullets;
     for (let i = 0; i < buls.length; i++) try {
@@ -175,6 +179,7 @@ export default class GameWorld {
       GameWorld.SproutCore.error(e);
       throw new Error(`Failed to render entity #${i}`, { cause: e });
     }
+    this.isUpdating = false;
   }
 
   addEntity(ent) {
@@ -188,7 +193,11 @@ export default class GameWorld {
     for (let i = 0; i < ents.length; i++) {
       if (ents[i]["unitid"] == id) return;
     }
-    this.entityque.push(ent);
+    if (this.isUpdating) {
+      this.entityque.push(ent);
+    } else {
+      this.entities.push(ent);
+    }
   }
   addBullet(bul) {
     bul = bul["getProxy"]?.();
@@ -201,7 +210,11 @@ export default class GameWorld {
     for (let i = 0; i < buls.length; i++) {
       if (buls[i]["unitid"] == id) return;
     }
-    this.bulletque.push(bul);
+    if (this.isUpdating) {
+      this.bulletque.push(bul);
+    } else {
+      this.bullets.push(bul);
+    }
   }
 
   /**
@@ -242,14 +255,19 @@ export default class GameWorld {
   }
 
   keyDown(k) {
+    this.isUpdating = true;
     for (let ent of this.entities) ent["keyDown"]?.(k);
     for (let bul of this.bullets) bul["keyDown"]?.(k);
+    this.isUpdating = false;
   }
   keyUp(k) {
+    this.isUpdating = true;
     for (let ent of this.entities) ent["keyUp"]?.(k);
     for (let bul of this.bullets) bul["keyUp"]?.(k);
+    this.isUpdating = false;
   }
   mouseDown(b, x, y) {
+    this.isUpdating = true;
     for (let ent of this.entities) {
       // Separated check because Pyodide
       if (ent["body"]["includesPoint"]?.(x, y)) {
@@ -259,13 +277,18 @@ export default class GameWorld {
       ent["mouseDown"]?.(b, x, y);
     }
     for (let bul of this.bullets) bul["mouseDown"]?.(b, x, y);
+    this.isUpdating = false;
   }
   mouseUp(b, x, y) {
+    this.isUpdating = true;
     for (let ent of this.entities) ent["mouseUp"]?.(b, x, y);
     for (let bul of this.bullets) bul["mouseUp"]?.(b, x, y);
+    this.isUpdating = false;
   }
   scroll(x, y, dx, dy) {
+    this.isUpdating = true;
     for (let ent of this.entities) ent["scroll"]?.(x, y, dx, dy);
     for (let bul of this.bullets) bul["scroll"]?.(x, y, dx, dy);
+    this.isUpdating = false;
   }
 }

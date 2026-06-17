@@ -300,6 +300,7 @@ const SproutCoreClass = class SproutCore {
       } finally {
         this.running = false;
         this.graphics.fillCanvas("black");
+        this.graphics.fillBackCanvas("black");
         this.publishEvent("gameStopped");
       }
     })();

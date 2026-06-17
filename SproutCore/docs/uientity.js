@@ -23,7 +23,7 @@ export default section("apiuientity", "UI Entity",
   `),
 
   methodoc(
-    "uientityconstructor", "UIEntity",
+    "Constructor", "UIEntity",
     "game.entity.UIEntity(x1, y1, x2, y2, color, text)", [
       arg("x1", "number", "left side x position of the block in pixels"),
       arg("y1", "number", "top side y position in pixels down from the top of the screen"),

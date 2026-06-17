@@ -303,3 +303,11 @@ export function methodoc(id, returnType, signature, args, desc) {
   );
   return ret;
 };
+
+let spantag = function(str, tag) {
+  return JSLib.build(["span", { class: tag }, str]);
+}
+
+export function highlight(str) {
+  // Todo: parse the python somehow
+}

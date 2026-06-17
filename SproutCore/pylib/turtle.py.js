@@ -1,23 +1,20 @@
+export default `
 import SproutCore
-from entity import Entity
+from pylib.entity import Entity
 
 class TurtleEntity(Entity):
   def __init__(this):
     super().__init__()
-    this.lineColor = "FFFFFF"
-    this.fillColor = "FFFFFF"
-    this.isPenDown = True
+    this.lineColor = "#FFFFFF"
+    this.fillColor = "#FFFFFF"
+    this.isPenDown = False
     this.isFilling = False
     this.penWidth = 1
     this.history = []
+    this.hidden = True
 
   def drawLine(this, x0, y0, x1, y1):
-    SproutCore.graphics.backCanvasContext.strokeStyle = this.lineColor
-    SproutCore.graphics.backCanvasContext.lineWidth = this.penWidth
-    SproutCore.graphics.backCanvasContext.beginPath()
-    SproutCore.graphics.backCanvasContext.moveTo(x0, y0)
-    SproutCore.graphics.backCanvasContext.lineTo(x1, y1)
-    SproutCore.graphics.backCanvasContext.stroke()
+    SproutCore.graphics.lineBack(x0, y0, x1, y1, this.lineColor, this.penWidth)
 
   def penDown(this):
     this.isPenDown = True
@@ -85,4 +82,9 @@ class TurtleEntity(Entity):
   
   def setHeading(this, angle):
     this.angle = angle % 360
-  
+
+  def drawImage(this, image, sx = 1, sy = 1, clock = 0):
+    SproutCore.graphics.drawBack(image, this.x, this.y, sx, sy, this.angle, None, None, clock)
+
+Entity.TurtleEntity = TurtleEntity
+`;

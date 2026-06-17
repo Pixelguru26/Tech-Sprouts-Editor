@@ -14,6 +14,7 @@ const member = lib.member;
 const table = lib.table;
 
 import uientity from "./uientity.js";
+import turtleentity from "./turtleentity.js";
 
 export default section("apientity", "Entity",
   str("Accessed as:", code("game.entity")),
@@ -42,9 +43,10 @@ export default section("apientity", "Entity",
       member("ax", "number", "horizontal acceleration in pixels per second per second"),
       member("ay", "number", "vertical acceleration in pixels per second per second"),
       member("body", "game.geo.shape", "the physical collision bound of the entity, includes its location"),
-      member("sprite", "game.asset.ImageAsset", "todo"),
+      member("sprite", "game.asset.ImageAsset", "the asset to be drawn for this entity. Defaults to an error image if not valid."),
       member("drawdebug", "bool", "if True, a debug outline is drawn around the entity's bounds"),
-      member("world", "SproutCore.GameWorld", "a reference to the game world this entity is in")
+      member("world", "SproutCore.GameWorld", "a reference to the game world this entity is in"),
+      member("hidden", "bool", "if True, the entity will still exist but not be displayed.")
     )
   ),
 
@@ -270,5 +272,6 @@ export default section("apientity", "Entity",
   ),
 
   // Subclass documentation
-  uientity
+  uientity,
+  turtleentity
 );

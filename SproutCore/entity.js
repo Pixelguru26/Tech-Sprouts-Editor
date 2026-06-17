@@ -5,7 +5,6 @@ import { Shape } from "./geometry.js";
  * Only exists as a helper to the Python class.
  */
 let Entity = class Entity {
-  /** @type {CanvasRenderingContext2D} */
   static SproutCore = null; // Provided during initialization
 
   static teams = [
