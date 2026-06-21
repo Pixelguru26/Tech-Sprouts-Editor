@@ -5,7 +5,6 @@ import { Shape } from "./geometry.js";
  * Only exists as a helper to the Python class.
  */
 let Entity = class Entity {
-  /** @type {CanvasRenderingContext2D} */
   static SproutCore = null; // Provided during initialization
 
   static teams = [
@@ -69,7 +68,7 @@ let Entity = class Entity {
         } else {
           g.drawCentered(img, cx, cy, sx, sy, a, cx, cy, entity["age"]);
         }
-        if (entity["drawdebug"]) g.debugCircle(cx, cy, body.r);
+        if (entity["drawDebug"]) g.debugCircle(cx, cy, body.r);
         break;
       case "rec":
         if (entity["autoscale"]) {
@@ -77,7 +76,7 @@ let Entity = class Entity {
         } else {
           g.draw(img, x, y, sx, sy, a, cx, cy, entity["age"]);
         }
-        if (entity["drawdebug"]) g.debugRect(x, y, w, h);
+        if (entity["drawDebug"]) g.debugRect(x, y, w, h);
         break;
       case "line":
         if (entity["autoscale"]) {
@@ -92,13 +91,13 @@ let Entity = class Entity {
           cy = body.by
           g.drawCentered(img, cx, cy, sx, sy, a, cx, cy, entity["age"]);
         }
-        if (entity["drawdebug"]) g.debugLine(body.ax, body.ay, body.bx, body.by);
+        if (entity["drawDebug"]) g.debugLine(body.ax, body.ay, body.bx, body.by);
         break;
       default:
-        if (entity["drawdebug"]) g.debugRect(x, y, w, h);
+        if (entity["drawDebug"]) g.debugRect(x, y, w, h);
         break;
     }
-    if (entity["drawdebug"]) {
+    if (entity["drawDebug"]) {
       g.debugDot(x, y);
       g.debugDot(x + w, y);
       g.debugDot(cx, cy);

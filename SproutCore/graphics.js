@@ -18,6 +18,8 @@ export default class Graphics {
     this.backCanvas.height = height;
     this.backCanvas.style.display = "none";
     document.body.appendChild(this.backCanvas);
+    this.maxWidth = 8192;
+    this.maxHeight = 8192;
   }
   
   bindCanvasContext(ctx) {
@@ -61,7 +63,7 @@ export default class Graphics {
 
   /**
    * Notifies the graphics library of a canvas resize
-   * and updates the back canvas if necessary.
+   * and updates the canvas.
    * @param {number} width 
    * @param {number} height 
    */
@@ -70,30 +72,41 @@ export default class Graphics {
     let oldHeight = this.height;
     this.width = width;
     this.height = height;
-    // Expand back canvas as necessary to cover full screen size
-    // To avoid loss of contents, does not shrink
-    if (width > this.backCanvas.width || height > this.backCanvas.height) {
-      // Construct new back canvas
-      let newBackCanvas = document.createElement("canvas");
-      newBackCanvas.width = Math.max(oldWidth, width);
-      newBackCanvas.height = Math.max(oldHeight, height);
-      newBackCanvas.style.display = "none";
-      document.body.appendChild(newBackCanvas);
-      this.backCanvasContext = newBackCanvas.getContext("2d");
-      // Clear new back canvas
-      this.backCanvasContext.fillStyle = "black";
-      this.backCanvasContext.fillRect(0, 0, newBackCanvas.width, newBackCanvas.height);
-      // Transfer contents from old canvas
-      this.backCanvasContext.drawImage(this.backCanvas, 0, 0);
-      // Swap new canvas into place
-      this.backCanvas.remove(); // Todo: test to ensure this is disposed properly
-      this.backCanvas = newBackCanvas;
-    }
     // if (this.canvasContext) {
     //   this.canvasContext.canvas.width = width;
     //   this.canvasContext.canvas.height = height;
     // }
     this.publishEvent("resize", width, height, oldWidth, oldHeight);
+  }
+
+  resizeBackCanvas(width, height, expandOnly = true) {
+    let newBackCanvas;
+    if (expandOnly) {
+      // Expand back canvas as necessary to cover full screen size
+      // To avoid loss of contents, does not shrink
+      if (width > this.backCanvas.width || height > this.backCanvas.height) {
+        // Construct new back canvas
+        newBackCanvas = document.createElement("canvas");
+        newBackCanvas.width = Math.max(this.backCanvas.width, Math.min(width, this.maxWidth));
+        newBackCanvas.height = Math.max(this.backCanvas.height, Math.min(height, this.maxHeight));
+      } else return;
+    } else {
+      newBackCanvas = document.createElement("canvas");
+      newBackCanvas.width = width;
+      newBackCanvas.height = height;
+    }
+    newBackCanvas.style.display = "none";
+    document.body.appendChild(newBackCanvas);
+    this.backCanvasContext = newBackCanvas.getContext("2d");
+    // Clear new back canvas
+    this.backCanvasContext.fillStyle = "black";
+    this.backCanvasContext.fillRect(0, 0, newBackCanvas.width, newBackCanvas.height);
+    // Transfer contents from old canvas
+    this.backCanvasContext.drawImage(this.backCanvas, 0, 0);
+    // Swap new canvas into place
+    this.backCanvas.remove(); // Todo: test to ensure this is disposed properly
+    this.backCanvas = newBackCanvas;
+    return newBackCanvas;
   }
 
   /**
@@ -574,6 +587,59 @@ export default class Graphics {
     c.lineWidth = outlineWidth;
     c.strokeText(string, 0, 0);
     c.fillText(string, 0, 0);
+    c.restore();
+  }
+
+  // Back canvas utils
+
+  fillBackCanvas(color) {
+    if (!this.backCanvasContext) return;
+    let ctx = this.backCanvasContext;
+    let oldColor = ctx.fillStyle;
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.fillStyle = oldColor;
+  }
+
+  lineBack(x0, y0, x1, y1, color = "white", width = 1) {
+    if (!this.backCanvasContext) return;
+    this.resizeBackCanvas(Math.max(x0, x1), Math.max(y0, y1));
+    let ctx = this.backCanvasContext;
+    let oldColor = ctx.strokeStyle;
+    let oldWidth = ctx.lineWidth;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
+    ctx.closePath();
+    ctx.strokeStyle = oldColor;
+    ctx.lineWidth = oldWidth;
+  }
+
+  /**
+   * Renders an image to the background canvas.
+   * @param {CanvasImageSource} img 
+   * @param {number} x x position
+   * @param {number} y y position
+   * @param {number} [sx=1] horizontal scale
+   * @param {number} [sy=1] vertical scale
+   * @param {number} [r=0] angle, in degrees
+   * @param {number} [cx=x] x position of pivot point
+   * @param {number} [cy=y] y position of pivot point
+   * @param {number} [clock=0] time in seconds for animated images
+   */
+  drawBack(img, x, y, sx = 1, sy = 1, r = 0, cx = null, cy = null, clock = 0) {
+    const c = this.canvasContext;
+    if (!c) return;
+    c.save();
+    this.transform(x, y, sx, sy, r, cx ?? x, cy ?? y);
+    if (img instanceof Asset) {
+      img.draw(c, clock);
+    } else {
+      c.drawImage(img, 0, 0);
+    }
     c.restore();
   }
 }

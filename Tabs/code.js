@@ -1,4 +1,18 @@
 import JSLib from "../SproutCore/lib.js";
+import snips from "./autocompletes.js";
+
+const completer = {
+  getCompletions: (editor, session, pos, prefix, callback) => {
+    const suggestions = snips.map(keyword => {
+      if (JSLib.isString(keyword)) {
+        return { name: keyword, value: keyword, score: 1000 };
+      } else {
+        return keyword;
+      }
+    });
+    callback(null, suggestions);
+  }
+};
 
 export default class Editor {
   #stopThread = null; // Current function to interrupt the autosave thread. Updated each time autosave cycles.
@@ -7,6 +21,15 @@ export default class Editor {
     this.editorElement = JSLib.buildElement("div", {
       class: "editor-container"
     });
+    ace.require("ace/ext/language_tools");
+    ace.require("ace/ext/code_lens");
+    ace.require("ace/ext/command_bar");
+    ace.require("ace/ext/searchbox");
+    ace.require("ace/ext/inline_autocomplete");
+    ace.require("ace/ext/keybinding_menu");
+    ace.require("ace/ext/options");
+    ace.require("ace/ext/settings_menu");
+    let snipper = ace.require("ace/snippets").snippetManager;
     this.editor = ace.edit(this.editorElement, {
       mode: "ace/mode/python",
       theme: "ace/theme/monokai",
@@ -15,6 +38,22 @@ export default class Editor {
       copyWithEmptySelection: true,
       mergeUndoDeltas: true,
       scrollPastEnd: 1
+    });
+    // add command to lazy-load keybinding_menu extension
+    this.editor.commands.addCommand({
+      name: "showKeyboardShortcuts",
+      bindKey: { win: "Ctrl-Alt-h", mac: "Command-h" },
+      exec: function (editor) {
+        ace.config.loadModule("ace/ext/keybinding_menu", function (module) {
+          module.init(editor);
+          editor.showKeyboardShortcuts()
+        })
+      }
+    });
+    this.editor.setOptions({
+      enableBasicAutocompletion: [completer],
+      enableSnippets: true,
+      enableLiveAutocompletion: true
     });
 
     /** @type {string} */
@@ -27,6 +66,10 @@ export default class Editor {
     this.editor.addEventListener("change", (delta) => {
       this.markDirty();
     });
+    if (!window.localStorage.getItem("hasShownKeyboardShortcuts")) {
+      window.localStorage.setItem("hasShownKeyboardShortcuts", Date.now());
+      this.editor.execCommand("showKeyboardShortcuts");
+    }
   }
 
   init() {

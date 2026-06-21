@@ -26,7 +26,8 @@ export class Panel {
   constructor(options) {
     this._element = JSLib.buildElement("div", {
       style: {
-        width: "100%", height: "100%"
+        width: "100%", height: "100%",
+        overflow: "scroll"
       }
     });
   }

@@ -83,9 +83,12 @@ export function argument(name, type, desc) {
 }
 
 export function code(text) {
-  return JSLib.buildElement("code", {
-    textContent: text
+  let ret = JSLib.buildElement("code", {
+    textContent: text,
+    className: "language-python"
   });
+  hljs.highlightElement(ret);
+  return ret;
 }
 /**
  * Constructs a code element containing the provided text.
@@ -116,12 +119,17 @@ export function codeblock(text) {
   if (text[0].length <= 1) text.shift(); // Clean leading lines from formatting
   text = text.join('\n');
 
+  let pre = JSLib.build([
+    "pre", { textContent: text }
+  ]);
+  hljs.highlightElement(pre, { language: 'python' });
+
   // Construct final element tree
   let ret = JSLib.build([
     "code", { style: {
       position: "relative"
     }}, [
-      ["pre", { textContent: text }],
+      pre,
       ["div", { class: "code-copy-button prevent-select", style: {
         position: "absolute",
         top: "2px",
@@ -303,3 +311,11 @@ export function methodoc(id, returnType, signature, args, desc) {
   );
   return ret;
 };
+
+let spantag = function(str, tag) {
+  return JSLib.build(["span", { class: tag }, str]);
+}
+
+export function highlight(str) {
+  // Todo: parse the python somehow
+}

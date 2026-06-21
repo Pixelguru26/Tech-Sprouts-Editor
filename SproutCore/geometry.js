@@ -1,4 +1,20 @@
+// let Engine = Matter.Engine;
+// let Render = Matter.Render;
+// let Runner = Matter.Runner;
+// let Bodies = Matter.Bodies;
+// let Body = Matter.Body;
+// let Composite = Matter.Composite;
+// let Vertices = Matter.Vertices;
+
 const Geo = class Geo {
+  // static Body = Matter.Body;
+  // static MatterRectangle(x, y, w, h) {
+  //   return Matter.Bodies.rectangle(x, y, w, h);
+  // }
+  // static Mattercircle(x, y, r) {
+  //   return Matter.Bodies.circle(x, y, r);
+  // }
+
   /**
    * Returns the Euclidean distance between a pair\
    * of two-dimensional points, `a` and `b`.
@@ -440,6 +456,52 @@ const Geo = class Geo {
         }
       default: break;
     }
+  }
+
+  /**
+   * Calculates the area of an arbitrary triangle given its side lengths.
+   * @param {number} a Side length
+   * @param {number} b Side length
+   * @param {number} c Side length
+   * @returns Area
+   */
+  static heron(a, b, c) {
+    let s = 0.5 * (a + b + c);
+    return Math.sqrt(s*(s-a)*(s-b)*(s-c));
+  }
+
+  // Irrelevant math added during research
+
+  static dot3(ax, ay, az, bx, by, bz) {
+    return ax*bx + ay*by + az*bz;
+  }
+  static cross3(ax, ay, az, bx, by, bz) {
+    return [
+      ay*bz - az*by,
+      az*bx - ax*bz,
+      ax*by - ay*bx
+    ];
+  }
+  static tripleProd(ax, ay, az, bx, by, bz, cx, cy, cz) {
+    let crossx = ay*bz - az*by;
+    let crossy = az*bx - ax*bz;
+    let crossz = ax*by - ay*bx;
+    return this.dot3(crossx, crossy, crossz, cx, cy, cz);
+  }
+  static lineTriangle3d(lox, loy, loz, ldx, ldy, ldz, ax, ay, az, bx, by, bz, cx, cy, cz) {
+    let pax = ax - lox; let pay = ay - loy; let paz = az - loz;
+    let pbx = bx - lox; let pby = by - loy; let pbz = bz - loz;
+    let pcx = cx - lox; let pcy = cy - loy; let pcz = cz - loz;
+
+    let u = this.tripleProd(ldx, ldy, ldz, pcx, pcy, pcz, pbx, pby, pbz);
+    if (u < 0) return false;
+    let v = this.tripleProd(ldx, ldy, ldz, pax, pay, paz, pcx, pcy, pcz);
+    if (v < 0) return false;
+    let w = this.tripleProd(ldx, ldy, ldz, pbx, pby, pbz, pax, pay, paz);
+    if (w < 0) return false;
+
+    let inv = 1 / (u + v + w);
+    return [u / inv, v / inv, w / inv];
   }
 }
 
@@ -1444,6 +1506,7 @@ class Convex extends Shape {
     return true;
   }
 }
+
 
 // ==========================================
 // Intersection tests

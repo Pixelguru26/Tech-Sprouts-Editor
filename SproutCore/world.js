@@ -1,3 +1,9 @@
+let Engine = Matter.Engine;
+let Render = Matter.Render;
+let Runner = Matter.Runner;
+let Bodies = Matter.Bodies;
+let Body = Matter.Body;
+let Composite = Matter.Composite;
 
 export default class GameWorld {
   static SproutCore = null;
@@ -7,10 +13,18 @@ export default class GameWorld {
     this.bullets = [];
     this.entityque = [];
     this.bulletque = [];
+    this.engine = Engine.create();
+    this.engine.enableSleeping = true;
     // Gravity in px/(s^2)
     this.gravityX = 0;
     this.gravityY = 100;
+    this.isUpdating = false;
   }
+
+  get gravityX() {return this.engine.world.gravity.x;}
+  get gravityY() {return this.engine.world.gravity.y;}
+  set gravityX(g) {this.engine.world.gravity.x = g;}
+  set gravityY(g) {this.engine.world.gravity.y = g;}
 
   new() { return new GameWorld(); }
 
@@ -54,6 +68,9 @@ export default class GameWorld {
   }
 
   update(dt) {
+    this.isUpdating = true;
+    Engine.update(this.engine, dt * 1000);
+
     let entq = this.entityque;
     let bulq = this.bulletque;
     let ents = this.entities;
@@ -62,10 +79,16 @@ export default class GameWorld {
     for (let i = 0; i < entq.length; i++) {
       entq[i].world = this;
       ents.push(entq[i]);
+      // if (entq[i].body instanceof Body) {
+      //   Composite.add(this.engine.world, entq[i].body);
+      // }
     }
     for (let i = 0; i < bulq.length; i++) {
       bulq[i].world = this;
       buls.push(bulq[i]);
+      // if (entq[i].body instanceof Body) {
+      //   Composite.add(this.engine.world, bulq[i].body);
+      // }
     }
     entq.length = 0;
     bulq.length = 0;
@@ -138,6 +161,9 @@ export default class GameWorld {
       try {
         if (!ent.alive) {
           ents.splice(i, 1);
+          // if (ent.body instanceof Body) {
+          //   Composite.remove(this.engine.world, ent.body);
+          // }
           if (!ent["persistent"]) ent["finalize"]?.();
         }
       } catch (e) {
@@ -151,6 +177,9 @@ export default class GameWorld {
       try {
         if (!bul["alive"]) {
           buls.splice(i, 1);
+          // if (bul.body instanceof Body) {
+          //   Composite.remove(this.engine.world, bul.body);
+          // }
         }
         if (!bul["persistent"]) bul["finalize"]?.();
       } catch (e) {
@@ -158,9 +187,11 @@ export default class GameWorld {
         throw new Error(`Error on disposal of bullet #${i}`, { cause: e });
       }
     }
+    this.isUpdating = false;
   }
 
   draw() {
+    this.isUpdating = true;
     let ents = this.entities;
     let buls = this.bullets;
     for (let i = 0; i < buls.length; i++) try {
@@ -175,6 +206,7 @@ export default class GameWorld {
       GameWorld.SproutCore.error(e);
       throw new Error(`Failed to render entity #${i}`, { cause: e });
     }
+    this.isUpdating = false;
   }
 
   addEntity(ent) {
@@ -188,7 +220,14 @@ export default class GameWorld {
     for (let i = 0; i < ents.length; i++) {
       if (ents[i]["unitid"] == id) return;
     }
-    this.entityque.push(ent);
+    if (this.isUpdating) {
+      this.entityque.push(ent);
+    } else {
+      this.entities.push(ent);
+      // if (ent.body instanceof Body) {
+      //   Composite.add(this.engine.world, ent.body);
+      // }
+    }
   }
   addBullet(bul) {
     bul = bul["getProxy"]?.();
@@ -201,7 +240,14 @@ export default class GameWorld {
     for (let i = 0; i < buls.length; i++) {
       if (buls[i]["unitid"] == id) return;
     }
-    this.bulletque.push(bul);
+    if (this.isUpdating) {
+      this.bulletque.push(bul);
+    } else {
+      this.bullets.push(bul);
+      // if (ent.body instanceof Body) {
+      //   Composite.add(this.engine.world, bul.body);
+      // }
+    }
   }
 
   /**
@@ -239,33 +285,43 @@ export default class GameWorld {
       console.warn("Failed to finalize: ", bul, " Error: ", e);
     }
     this.bulletque.length = 0;
+    Composite.clear(this.engine.world, false);
   }
 
   keyDown(k) {
+    this.isUpdating = true;
     for (let ent of this.entities) ent["keyDown"]?.(k);
     for (let bul of this.bullets) bul["keyDown"]?.(k);
+    this.isUpdating = false;
   }
   keyUp(k) {
+    this.isUpdating = true;
     for (let ent of this.entities) ent["keyUp"]?.(k);
     for (let bul of this.bullets) bul["keyUp"]?.(k);
+    this.isUpdating = false;
   }
   mouseDown(b, x, y) {
+    this.isUpdating = true;
     for (let ent of this.entities) {
       // Separated check because Pyodide
       if (ent["body"]["includesPoint"]?.(x, y)) {
-        console.log("CLICKED ENTITY", ent);
         GameWorld.SproutCore?.callPyEvent("entityClick", ent, b, x, y);
       }
       ent["mouseDown"]?.(b, x, y);
     }
     for (let bul of this.bullets) bul["mouseDown"]?.(b, x, y);
+    this.isUpdating = false;
   }
   mouseUp(b, x, y) {
+    this.isUpdating = true;
     for (let ent of this.entities) ent["mouseUp"]?.(b, x, y);
     for (let bul of this.bullets) bul["mouseUp"]?.(b, x, y);
+    this.isUpdating = false;
   }
   scroll(x, y, dx, dy) {
+    this.isUpdating = true;
     for (let ent of this.entities) ent["scroll"]?.(x, y, dx, dy);
     for (let bul of this.bullets) bul["scroll"]?.(x, y, dx, dy);
+    this.isUpdating = false;
   }
 }
