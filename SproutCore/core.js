@@ -284,7 +284,7 @@ const SproutCoreClass = class SproutCore {
           if (dt !== 0) {
             // Need to investigate why 0 delay frames are happening.
             this.callPyEvent("update", dt);
-            // this.graphics.fillCanvas("black");
+            this.graphics.fillCanvas("black");
             this.graphics.canvasContext?.drawImage(this.graphics.backCanvas, 0, 0);
             this.callPyEvent("draw");
           }

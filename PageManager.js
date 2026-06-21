@@ -98,7 +98,7 @@ export default class PageManager {
     this.consolePanel = this.api.addPanel({
       id: "console", title: "Console",
       component: "default", tabComponent: "default",
-      position: { referencePanel: "game", direction: "below" },
+      position: { referencePanel: "game", direction: "right" },
       params: {
         contents: [consoleElement]
       }

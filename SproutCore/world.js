@@ -1,3 +1,9 @@
+let Engine = Matter.Engine;
+let Render = Matter.Render;
+let Runner = Matter.Runner;
+let Bodies = Matter.Bodies;
+let Body = Matter.Body;
+let Composite = Matter.Composite;
 
 export default class GameWorld {
   static SproutCore = null;
@@ -7,11 +13,18 @@ export default class GameWorld {
     this.bullets = [];
     this.entityque = [];
     this.bulletque = [];
+    this.engine = Engine.create();
+    this.engine.enableSleeping = true;
     // Gravity in px/(s^2)
     this.gravityX = 0;
     this.gravityY = 100;
     this.isUpdating = false;
   }
+
+  get gravityX() {return this.engine.world.gravity.x;}
+  get gravityY() {return this.engine.world.gravity.y;}
+  set gravityX(g) {this.engine.world.gravity.x = g;}
+  set gravityY(g) {this.engine.world.gravity.y = g;}
 
   new() { return new GameWorld(); }
 
@@ -56,6 +69,8 @@ export default class GameWorld {
 
   update(dt) {
     this.isUpdating = true;
+    Engine.update(this.engine, dt * 1000);
+
     let entq = this.entityque;
     let bulq = this.bulletque;
     let ents = this.entities;
@@ -64,10 +79,16 @@ export default class GameWorld {
     for (let i = 0; i < entq.length; i++) {
       entq[i].world = this;
       ents.push(entq[i]);
+      // if (entq[i].body instanceof Body) {
+      //   Composite.add(this.engine.world, entq[i].body);
+      // }
     }
     for (let i = 0; i < bulq.length; i++) {
       bulq[i].world = this;
       buls.push(bulq[i]);
+      // if (entq[i].body instanceof Body) {
+      //   Composite.add(this.engine.world, bulq[i].body);
+      // }
     }
     entq.length = 0;
     bulq.length = 0;
@@ -140,6 +161,9 @@ export default class GameWorld {
       try {
         if (!ent.alive) {
           ents.splice(i, 1);
+          // if (ent.body instanceof Body) {
+          //   Composite.remove(this.engine.world, ent.body);
+          // }
           if (!ent["persistent"]) ent["finalize"]?.();
         }
       } catch (e) {
@@ -153,6 +177,9 @@ export default class GameWorld {
       try {
         if (!bul["alive"]) {
           buls.splice(i, 1);
+          // if (bul.body instanceof Body) {
+          //   Composite.remove(this.engine.world, bul.body);
+          // }
         }
         if (!bul["persistent"]) bul["finalize"]?.();
       } catch (e) {
@@ -197,6 +224,9 @@ export default class GameWorld {
       this.entityque.push(ent);
     } else {
       this.entities.push(ent);
+      // if (ent.body instanceof Body) {
+      //   Composite.add(this.engine.world, ent.body);
+      // }
     }
   }
   addBullet(bul) {
@@ -214,6 +244,9 @@ export default class GameWorld {
       this.bulletque.push(bul);
     } else {
       this.bullets.push(bul);
+      // if (ent.body instanceof Body) {
+      //   Composite.add(this.engine.world, bul.body);
+      // }
     }
   }
 
@@ -252,6 +285,7 @@ export default class GameWorld {
       console.warn("Failed to finalize: ", bul, " Error: ", e);
     }
     this.bulletque.length = 0;
+    Composite.clear(this.engine.world, false);
   }
 
   keyDown(k) {
@@ -271,7 +305,6 @@ export default class GameWorld {
     for (let ent of this.entities) {
       // Separated check because Pyodide
       if (ent["body"]["includesPoint"]?.(x, y)) {
-        console.log("CLICKED ENTITY", ent);
         GameWorld.SproutCore?.callPyEvent("entityClick", ent, b, x, y);
       }
       ent["mouseDown"]?.(b, x, y);

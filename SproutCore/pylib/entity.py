@@ -39,6 +39,7 @@ class Entity:
     this.hidden = False
 
     this.body = SproutCore.Geo.Circle.new(0, 0, 0)
+    # this.body = SproutCore.Geo.MatterRectangle(0, 0, 100, 100)
     this.sprite = SproutCore.Asset.ImageAsset.getImage("error.png")
     this.__proxy = None
     this.alive = True
@@ -48,20 +49,32 @@ class Entity:
 
   # Physics passthroughs
   def __get_x__(this):
+    # return this.body.position.x
     return this.body.x
   def __set_x__(this, value):
+    # this.body.position.x = value
     this.body.x = value
   x = property(__get_x__, __set_x__, __nop__,
     "Passthrough for the x position of the physics body of this object."
   )
 
   def __get_y__(this):
+    # return this.body.position.y
     return this.body.y
   def __set_y__(this, value):
+    # this.body.position.y = value
     this.body.y = value
   y = property(__get_y__, __set_y__, __nop__,
     "Passthrough for the y position of the physics body of this object."
   )
+
+  # def __get_angle__(this):
+  #   return this.body.angle * 180 / pi
+  # def __set_angle__(this, value):
+  #   this.body.angle = value / 180 * pi
+  # angle = property(__get_angle__, __set_angle__, __nop__,
+  #   "Passthrough for the angle of the physics body of this object, in degrees."
+  # )
 
   def __get_w__(this):
     return this.body.w
@@ -144,8 +157,10 @@ class Entity:
   # ====
 
   def __get_collision_type__(this):
+    # return this.body.label
     return this.body.type
   def __set_collision_type__(this, value):
+    # old = this.body.label
     old = this.body.type
     if (value == old):
       return
@@ -180,6 +195,7 @@ class Entity:
     """
     if not this.hidden:
       SproutCore.Entity.draw(this)
+      # SproutCore.graphics.draw(this.sprite, this.x, this.y, 1, 1, this.angle)
   
   def update(this, dt):
     """

@@ -2,6 +2,7 @@ import JSLib from "../SproutCore/lib.js";
 // Todo: move all docs content to new distributed model.
 // For now, import some parts manually.
 import tutorial from "../SproutCore/docs/main.js";
+import apiasset from "../SproutCore/docs/asset.js";
 import apientity from "../SproutCore/docs/entity.js";
 
 function uid(id) {
@@ -160,108 +161,108 @@ const data = [
   section(
     "api", "API",
     section("apigame", "Game",
-      section("apiasset", "Assets",
-        text("Accessed as:", code("game.asset")),
-        section("apiimageasset", "ImageAsset",
-          text("Accessed as:", code("game.asset.ImageAsset")),
-          section("apiimageassetmembers", "Instance Members",
-            table(
-              member("src", "string", "the url of the source image to load, can also be a path to default assets."),
-              member("width", "number", "(read-only) width of the image in pixels"),
-              member("height", "number", "(read-only) height of the image in pixels")
-            )
-          ),
-          section("apiimageassetfunctions", "Static Methods",
-            methodoc("getImage", "game.asset.ImageAsset",
-              "game.asset.ImageAsset.getImage(path, abs)",
-              [
-                argument("path", "string", "Path of the file relative to './Assets/'"),
-                argument("abs", "bool", "if True, path is not relative and can potentially be a web url.")
-              ],
-              `
-                Attempts to retrieve an image from the provided location.
-                If the image has been loaded previously, reuses the original.
-              `
-            ),
-            methodoc("new", "game.asset.ImageAsset",
-              "game.asset.ImageAsset.new(path, name, abs)",
-              [
-                argument("path", "string", "Path of the file relative to './Assets/'"),
-                argument("name", "string", "Registry name for the asset, used for easy access."),
-                argument("abs", "bool", "if True, path is not relative and can potentially be a web url.")
-              ],
-              `
-                Constructs a new image asset (if possible) from the provided source file.
-                The asset is added to the registry for easy access via getAsset().
-                Generally, you should prefer getImage() for this purpose.
-              `
-            ),
-          )
-        ),
-        section("apianimimageasset", "AnimImageAsset",
-          text("Accessed as:", code("game.asset.AnimImageAsset")),
-          section("apianimimageassetmembers",
-            table(
-              member("src", "string", "the url of the source image to load"),
-              member("width", "number", "(read-only) width of the widest frame in pixels"),
-              member("height", "number", "(read-only) height of the tallest frame in pixels"),
-              member("duration", "number", "(read-only) length of the animation in seconds"),
-              member("frameRate", "number", "number of frames to display per second. Defaults to 30fps."),
-              member("animStyle", "string", text("animation behavior type. Can be any of: ", code("loop"), ", ", code("single"), ", ", code("dynamic"))),
-              member("frames", "array of game.geo.Rectangle", text("Rectangular sections of the original image to display for each frame of animation."))
-            )
-          ),
-          section("apianimimageassetmethods",
-            methodoc("onLoad", "void", "instance.onLoad()", [],
-              text("This method is called when the image finishes loading and is ready to be sliced.")
-            ),
-            methodoc("addFrame", "game.geo.Rectangle", "instance.addFrame(x, y, w, h)",
-              [
-                argument("x", "number", "top left x position"),
-                argument("y", "number", "top left y position"),
-                argument("w", "number", "width"),
-                argument("h", "number", "height")
-              ],
-              text("Adds a frame division as the last frame")
-            ),
-            methodoc("clear", "void", "instance.clear()", [], 
-              text("Clears all frame divisions from the list.")
-            ),
-            methodoc("slice", "void", "instance.slice(x, y, w, h, dx, dy)",
-              [
-                argument("x", "number", "top left x position of first frame"),
-                argument("y", "number", "top left y position of first frame"),
-                argument("w", "number", "width of each frame"),
-                argument("h", "number", "height of each frame"),
-                argument("dx", "number", "empty horizontal space between frames"),
-                argument("dy", "number", "empty vertical space between frames")
-              ],
-              text("Automatically generates a grid of frame divisions for the image.")
-            ),
-            methodoc("autoSlice", "void", "instance.autoSlice(x, y, hSlices, vSlices, dx, dy)",
-              [
-                argument("x", "number", "top left x position of first frame"),
-                argument("y", "number", "top left y position of first frame"),
-                argument("hSlices", "number", "Number of slices to generate columns of grid"),
-                argument("vSlices", "number", "Number of slices to generate rows of grid"),
-                argument("dx", "number", "empty horizontal space between frames"),
-                argument("dy", "number", "empty vertical space between frames")
-              ],
-              text("Utility method for automatically slicing an image into a certain number of frames vertically and horizontally, automatically calculating frame dimensions.")
-            ),
-            methodoc("frameAt", "game.geo.Rectangle", "instance.frameAt(clock)", [
-              argument("clock", "number", "Time to calculate frame at")
-            ], text("Returns the frame that should be displayed at the given time.")),
-            methodoc("draw", "void", "instance.draw(canvas, clock)", [
-                argument("canvas", "CanvasRenderingContext2D", "Target canvas for rendering"),
-                argument("clock", "number", "Current time of animation to render")
-              ],
-              text("Renders the appropriate frame for the supplied type at (0,0). To render in other locations, push a canvas transform first.")
-            )
-          )
-        )
-      ),
-      
+      // section("apiasset", "Assets",
+      //   text("Accessed as:", code("game.asset")),
+      //   section("apiimageasset", "ImageAsset",
+      //     text("Accessed as:", code("game.asset.ImageAsset")),
+      //     section("apiimageassetmembers", "Instance Members",
+      //       table(
+      //         member("src", "string", "the url of the source image to load, can also be a path to default assets."),
+      //         member("width", "number", "(read-only) width of the image in pixels"),
+      //         member("height", "number", "(read-only) height of the image in pixels")
+      //       )
+      //     ),
+      //     section("apiimageassetfunctions", "Static Methods",
+      //       methodoc("getImage", "game.asset.ImageAsset",
+      //         "game.asset.ImageAsset.getImage(path, abs)",
+      //         [
+      //           argument("path", "string", "Path of the file relative to './Assets/'"),
+      //           argument("abs", "bool", "if True, path is not relative and can potentially be a web url.")
+      //         ],
+      //         `
+      //           Attempts to retrieve an image from the provided location.
+      //           If the image has been loaded previously, reuses the original.
+      //         `
+      //       ),
+      //       methodoc("new", "game.asset.ImageAsset",
+      //         "game.asset.ImageAsset.new(path, name, abs)",
+      //         [
+      //           argument("path", "string", "Path of the file relative to './Assets/'"),
+      //           argument("name", "string", "Registry name for the asset, used for easy access."),
+      //           argument("abs", "bool", "if True, path is not relative and can potentially be a web url.")
+      //         ],
+      //         `
+      //           Constructs a new image asset (if possible) from the provided source file.
+      //           The asset is added to the registry for easy access via getAsset().
+      //           Generally, you should prefer getImage() for this purpose.
+      //         `
+      //       ),
+      //     )
+      //   ),
+      //   section("apianimimageasset", "AnimImageAsset",
+      //     text("Accessed as:", code("game.asset.AnimImageAsset")),
+      //     section("apianimimageassetmembers",
+      //       table(
+      //         member("src", "string", "the url of the source image to load"),
+      //         member("width", "number", "(read-only) width of the widest frame in pixels"),
+      //         member("height", "number", "(read-only) height of the tallest frame in pixels"),
+      //         member("duration", "number", "(read-only) length of the animation in seconds"),
+      //         member("frameRate", "number", "number of frames to display per second. Defaults to 30fps."),
+      //         member("animStyle", "string", text("animation behavior type. Can be any of: ", code("loop"), ", ", code("single"), ", ", code("dynamic"))),
+      //         member("frames", "array of game.geo.Rectangle", text("Rectangular sections of the original image to display for each frame of animation."))
+      //       )
+      //     ),
+      //     section("apianimimageassetmethods",
+      //       methodoc("onLoad", "void", "instance.onLoad()", [],
+      //         text("This method is called when the image finishes loading and is ready to be sliced.")
+      //       ),
+      //       methodoc("addFrame", "game.geo.Rectangle", "instance.addFrame(x, y, w, h)",
+      //         [
+      //           argument("x", "number", "top left x position"),
+      //           argument("y", "number", "top left y position"),
+      //           argument("w", "number", "width"),
+      //           argument("h", "number", "height")
+      //         ],
+      //         text("Adds a frame division as the last frame")
+      //       ),
+      //       methodoc("clear", "void", "instance.clear()", [], 
+      //         text("Clears all frame divisions from the list.")
+      //       ),
+      //       methodoc("slice", "void", "instance.slice(x, y, w, h, dx, dy)",
+      //         [
+      //           argument("x", "number", "top left x position of first frame"),
+      //           argument("y", "number", "top left y position of first frame"),
+      //           argument("w", "number", "width of each frame"),
+      //           argument("h", "number", "height of each frame"),
+      //           argument("dx", "number", "empty horizontal space between frames"),
+      //           argument("dy", "number", "empty vertical space between frames")
+      //         ],
+      //         text("Automatically generates a grid of frame divisions for the image.")
+      //       ),
+      //       methodoc("autoSlice", "void", "instance.autoSlice(x, y, hSlices, vSlices, dx, dy)",
+      //         [
+      //           argument("x", "number", "top left x position of first frame"),
+      //           argument("y", "number", "top left y position of first frame"),
+      //           argument("hSlices", "number", "Number of slices to generate columns of grid"),
+      //           argument("vSlices", "number", "Number of slices to generate rows of grid"),
+      //           argument("dx", "number", "empty horizontal space between frames"),
+      //           argument("dy", "number", "empty vertical space between frames")
+      //         ],
+      //         text("Utility method for automatically slicing an image into a certain number of frames vertically and horizontally, automatically calculating frame dimensions.")
+      //       ),
+      //       methodoc("frameAt", "game.geo.Rectangle", "instance.frameAt(clock)", [
+      //         argument("clock", "number", "Time to calculate frame at")
+      //       ], text("Returns the frame that should be displayed at the given time.")),
+      //       methodoc("draw", "void", "instance.draw(canvas, clock)", [
+      //           argument("canvas", "CanvasRenderingContext2D", "Target canvas for rendering"),
+      //           argument("clock", "number", "Current time of animation to render")
+      //         ],
+      //         text("Renders the appropriate frame for the supplied type at (0,0). To render in other locations, push a canvas transform first.")
+      //       )
+      //     )
+      //   )
+      // ),
+      apiasset,
       apientity,
 
       section("apistate", "Game State",

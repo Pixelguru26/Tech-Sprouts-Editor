@@ -10,6 +10,7 @@ const div = lib.div;
 const br = lib.br;
 
 import rpsPy from "../pylib/games/rps.py.js";
+import tictactoePy from "../pylib/games/tictactoe.py.js";
 import caesarPy from "../pylib/demos/caesar.py.js";
 import bellassoPy from "../pylib/demos/bellasso.py.js";
 import palindromePy from "../pylib/demos/palindrome.py.js";
@@ -563,7 +564,7 @@ export default section(
         game.player.angle = game.player.angle + 100 * dt
     `)
   ),
-  section("tutorial5", "Level 5",
+  section("tutorial5", "Rock, Paper, Scissors",
     html(`Rock, Paper, Scissors<br>
       Here is a full example script for a simple
       game of rock, paper, scissors.
@@ -572,7 +573,16 @@ export default section(
     `),
     codeblock(rpsPy)
   ),
-  section("tutorial6", "Cryptography",
+  section("tutorial6", "Tic Tac Toe",
+    html(`Tic Tac Toe<br>
+      Here is a full example script for a simple
+      game of tic tac toe.
+      It can be copied into the editor
+      or simply used as reference material.
+    `),
+    codeblock(tictactoePy)
+  ),
+  section("tutorial7", "Cryptography",
     html(`Caesar Cipher<br>
       Todo: Caesar Cipher lesson
     `),
@@ -582,7 +592,7 @@ export default section(
     `),
     codeblock(bellassoPy)
   ),
-  section("tutorial7", "Turtle",
+  section("tutorial8", "Turtle",
     html(`Turtle Graphics<br>
       Todo: Turtle graphics lesson
     `),

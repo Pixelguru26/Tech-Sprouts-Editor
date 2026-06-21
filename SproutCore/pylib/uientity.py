@@ -17,29 +17,26 @@ class UIEntity(Entity):
     this.textOutlineColor = "#000000"
     this.textOutlineWidth = 1.5
     this.lifetime = -1
-    this.body.ax = x1
-    this.body.ay = y1
-    this.body.bx = x2
-    this.body.by = y2
+    this.body = SproutCore.Geo.Rectangle.new(x1, y1, x2 - x1, y2 - y1)
 
   def draw(this):
     if (this.outlineColor != "transparent" and this.outlineWidth > 0):
       SproutCore.graphics.fillRect(
-        this.body.ax - this.outlineWidth, this.body.ay - this.outlineWidth,
-        (this.body.bx - this.body.ax) + 2 * this.outlineWidth, (this.body.by - this.body.ay) + 2 * this.outlineWidth,
+        this.body.x - this.outlineWidth, this.body.y - this.outlineWidth,
+        this.body.w + 2 * this.outlineWidth, this.body.h + 2 * this.outlineWidth,
         this.outlineColor
       )
     if (this.color != "transparent"):
       SproutCore.graphics.fillRect(
-        this.body.ax, this.body.ay,
-        this.body.bx - this.body.ax, this.body.by - this.body.ay,
+        this.body.x, this.body.y,
+        this.body.w, this.body.h,
         this.color
       )
     if this.text != None:
       SproutCore.graphics.drawText(
         this.text,
-        this.body.ax, this.body.ay,
-        this.body.bx - this.body.ax, this.body.by - this.body.ay,
+        this.body.x, this.body.y,
+        this.body.w, this.body.h,
         this.textFont, this.textColor, this.textOutlineColor, this.textOutlineWidth,
         this.textFit, this.textAlignHoriz, this.textAlignVert
       )

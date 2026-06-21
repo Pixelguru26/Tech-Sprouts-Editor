@@ -30,7 +30,8 @@ export default section("apiturtleentity", "Turtle Entity",
     member("lineColor", "hexadecimal string", html(`Color of lines drawn as a hexadecimal color string, like "#272822". There are many websites that provide valid color codes, such as <a href="https://www.w3schools.com/colors/colors_picker.asp">https://www.w3schools.com/colors/colors_picker.asp</a>`)),
     member("fillColor", "hexadecimal string", `Shape fill color as a hexadecimal color string. "#ffffff" by default.`),
     member("isPenDown", "boolean", `Whether the pen is currently down, meaning that movement will draw lines. False initially.`),
-    member("penWidth", "number", `Width of lines drawn in pixels. 1 by default.`)
+    member("penWidth", "number", `Width of lines drawn in pixels. 1 by default.`),
+    member("delay", "number", `Delay between turtle actions, in seconds. When delay > 0, basic turtle actions are queued instead of executing immediately. Be warned that this includes changes to delay itself.`)
   )),
 
   section("apiturtleentitymethods", "Instance Methods",
@@ -136,5 +137,6 @@ export default section("apiturtleentity", "Turtle Entity",
         If the image is an animated sprite sheet, the clock value can be used to determine which frame of the animation to draw.
       `)
     )
-  )
+  ),
+  str(`For examples using turtle, check the tutorials section.`)
 );

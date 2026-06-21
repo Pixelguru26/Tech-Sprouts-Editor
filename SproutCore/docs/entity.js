@@ -52,37 +52,31 @@ export default section("apientity", "Entity",
 
   // Methods
   section("apientitymethods", "Instance Methods",
-    methodoc("draw", "void", "instance.draw()", [],
-      html(`
-        This method is called every frame to draw the entity to the screen.
-      `)
+    methodoc("draw", "void", "instance.draw()", [], html(
+        `This method is called every frame to draw the entity to the screen.`
+      )
     ),
-    methodoc("update", "void", "instance.update(dt)",
-      [ argument("dt", "number", "time since the last frame (delta time) in seconds") ],
-      html(`
+    methodoc("update", "void", "instance.update(dt)", [
+      argument("dt", "number", "time since the last frame (delta time) in seconds")
+    ], html(`
         This method is called every frame on every entity.
         This is where movement, ai, and moment-to-moment control occurs.
       `)
     ),
     methodoc("keydown", "void", "instance.keydown(key)",
       [ argument("key", "string", "the id of the key pressed") ],
-      html(`
-        Called once when a key is first pressed.
-      `)
+      html(`Called once when a key is first pressed.`)
     ),
     methodoc("keyup", "void", "instance.keyup()",
       [ argument("key", "string", "the id of the key released") ],
-      html(`
-        Called once when a key is released.
-      `)
+      html(`Called once when a key is released.`)
     ),
     methodoc("mousedown", "void", "instance.mousedown(b, x, y)",
       [
         argument("b", "number", "which mouse button was pressed"),
         argument("x", "number", "the horizontal position of the cursor when the mouse was clicked"),
         argument("y", "number", "the vertical position of the cursor when the mouse was clicked")
-      ],
-      html(`
+      ], html(`
         Called once when the mouse is first clicked.
         May not always match up with a mouseup event appropriately due to window interactions.
       `)
@@ -92,8 +86,7 @@ export default section("apientity", "Entity",
         argument("b", "number", "which mouse button was released"),
         argument("x", "number", "the horizontal position of the cursor when the button was released"),
         argument("y", "number", "the vertical position of the cursor when the button was released")
-      ],
-      html(`
+      ], html(`
         Called once when a button is released on the mouse.
         May not always match up with a mousedown event appropriately due to window interactions.
         Will also not be called if the button is released outside of the window.
@@ -117,12 +110,13 @@ export default section("apientity", "Entity",
         Used to trigger interactions such as contact damage, detonation, and ricochet.
       `)
     ),
-    methodoc("delete", "void", "instance.delete(reason)",
-      [ argument("reason", "any", "the general reason for deleting the entity")]
+    methodoc("delete", "void", "instance.delete(reason)", [
+        argument("reason", "any", "the general reason for deleting the entity")
+      ]
     ),
-    methodoc("intersects", "bool", "instance.intersects(other)",
-      [ argument("other", "game.entity", "the other entity to test for intersection") ],
-      html(`
+    methodoc("intersects", "bool", "instance.intersects(other)", [
+        argument("other", "game.entity", "the other entity to test for intersection")
+      ], html(`
         Returns True if the physical bounds of the entities are intersecting.
       `)
     ),
@@ -132,9 +126,9 @@ export default section("apientity", "Entity",
         Do not override unless you know what you're doing.
       `)
     ),
-    methodoc("forward", "void", "instance.forward(distance)",
-      [ argument("distance", "number", "distance to move in pixels") ],
-      html(`
+    methodoc("forward", "void", "instance.forward(distance)", [
+        argument("distance", "number", "distance to move in pixels")
+      ], html(`
         Moves the entity in the direction it's facing (based on angle)
         by the specified distance.
       `)
@@ -226,13 +220,11 @@ export default section("apientity", "Entity",
   // Static methods
   section("apientityfunctions", "Class Functions",
     methodoc("setRelationship", "None",
-      "game.entity.setRelationship(team1, team2, relationship)",
-      [
+      "game.entity.setRelationship(team1, team2, relationship)", [
         argument("team1", "string", 'Name of a team, such as "player", "enemy", "all", or "none"'),
         argument("team2", "string", 'Name of a team, such as "player", "enemy", "all", or "none"'),
         argument("relationship", "string", 'can be: None, "friendly", or "hostile"')
-      ],
-      `
+      ],`
         Sets the two-way relationship between two entity teams.
         If the relationship is "friendly," their projectiles will pass through without doing harm.
         If the relationship is "hostile," their projectiles and contact damage will harm one another.
@@ -245,9 +237,7 @@ export default section("apientity", "Entity",
         argument("team1", "string", 'Name of a team, such as "player", "enemy", "all", or "none"'),
         argument("team2", "string", 'Name of a team, such as "player", "enemy", "all", or "none"')
       ],
-      `
-        Sets the relationship between two entity teams to "friendly"
-      `
+      `Sets the relationship between two entity teams to "friendly"`
     ),
     methodoc("setHostile", "None",
       "game.entity.setHostile(team1, team2)",
@@ -255,9 +245,7 @@ export default section("apientity", "Entity",
         argument("team1", "string", 'Name of a team, such as "player", "enemy", "all", or "none"'),
         argument("team2", "string", 'Name of a team, such as "player", "enemy", "all", or "none"')
       ],
-      `
-        Sets the relationship between two entity teams to "hostile"
-      `
+      `Sets the relationship between two entity teams to "hostile"`
     ),
     methodoc("remRelationship", "None",
       "game.entity.setNeutral(team1, team2)",
@@ -265,13 +253,21 @@ export default section("apientity", "Entity",
         argument("team1", "string", 'Name of a team, such as "player", "enemy", "all", or "none"'),
         argument("team2", "string", 'Name of a team, such as "player", "enemy", "all", or "none"')
       ],
-      `
-        Sets the relationship between two entity teams to "none"
-      `
+      `Sets the relationship between two entity teams to "none"`
     )
   ),
 
   // Subclass documentation
   uientity,
-  turtleentity
+  turtleentity,
+
+  str("Example: "),
+  codeblock(`
+    entity = game.entity()
+    entity.sprite = game.asset.getAsset("rock")
+    entity.x = 100
+    entity.y = 100
+    entity.r = 50
+    game.world.addEntity(entity)
+  `)
 );

@@ -16,12 +16,14 @@ class Asset {
    * @param {boolean?} abs 
    */
   constructor(path, defaultVal, name = null, abs = false) {
-
     this.loaded = false;
     this.value = defaultVal;
 
-    if (abs) this.path = path;
-    else this.path = "./Assets/" + path;
+    if (abs) {
+      this.path = path;
+    } else {
+      this.path = "./Assets/" + path;
+    }
 
     // Remove file extension
     let i = path.lastIndexOf('.');
@@ -56,15 +58,14 @@ class Asset {
     return null;
   }
 
-  async load() {}
-
   /**
    * Executes all loadfunctions registered to this object.
    */
   onLoad() {
     if (!this.loadFunctions) return;
     for (const fn of this.loadFunctions) fn(this);
-    delete this.loadFunctions;
+    this.loadFunctions.length = 0;
+    this.loaded = true;
   }
 
   /**
@@ -73,11 +74,13 @@ class Asset {
    * @param {function(Asset): void} fn 
    */
   addCallback(fn) {
-    if (!this.loaded) {
+    if (this.loaded) {
+      fn(this);
+    } else {
       this.loadFunctions ??= [];
       if (!this.loadFunctions.includes(fn))
         this.loadFunctions.push(fn);
-    } else fn(this);
+    }
   }
 
   /**
@@ -120,6 +123,10 @@ Asset.ImageAsset = class ImageAsset extends Asset {
 
     this.element = document.createElement("img");
     this.element.src = this.path;
+    const local = this;
+    this.element.addEventListener("load", evt => {
+      local.onLoad();
+    });
     (document.getElementById("assets"))?.appendChild?.(this.element);
   }
 
@@ -244,12 +251,18 @@ Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
    * @param {bool} abs
    * @param {SliceArgs} args
    */
-  constructor(src, name, abs, args) {
+  constructor(src, name, abs, args = null) {
     super(src, name, abs);
-    this.frameRate = args.frameRate ?? 30;
-    this.animStyle = args.animStyle ?? "loop";
+    this.frameRate = args?.frameRate ?? 30;
+    this.animStyle = args?.animStyle ?? "loop";
     this.frames = [];
-    this.slice(args);
+    if (args !== null) {
+      this.slice(args);
+    }
+  }
+
+  static getImage(src, name, abs) {
+    return new AnimImageAsset(src, name, abs);
   }
 
   /** @type {number} Width is the maximum width of all frames */
@@ -273,18 +286,6 @@ Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
   /** @type {number} Duration of the animation, in seconds */
   get duration() { return this.frames.length / this.frameRate; }
 
-  onLoad() {
-    switch (this.autoSliceType) {
-      case 0:
-        this.autoSliceType(this.cutX, this.cutY, this.cutW, this.cutH, this.gapX, this.gapY);
-        break;
-      case 1:
-        this.autoSliceType(this.cutX, this.cutY, this.w/this.cutW, this.h/this.cutH, this.gapX, this.gapY);
-        break;
-    }
-    return super.onLoad();
-  }
-
   addFrame(x, y, w, h) {
     let r = Math.min(x + w, super.width);
     let d = Math.min(y + h, super.height);
@@ -303,10 +304,19 @@ Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
    */
   clear() { this.frames.length = 0; }
 
-  slice(x, y, w, h, dx = 0, dy = 0) {
+  slice(x, y = 0, w = 0, h = 0, dx = 0, dy = 0) {
+    this.addCallback(asset => {
+      asset._slice(x, y, w, h, dx, dy);
+    });
+  }
+  _slice(x, y, w, h, dx = 0, dy = 0) {
+    this.clear();
     let fw = super.width;
     let fh = super.height;
-    if (typeof x === "object") {
+    if (typeof x === "number") {
+      w = w < 0 ? fw : w;
+      h = h < 0 ? fh : h;
+    } else {
       /** @type {SliceArgs} */
       let args = x;
       x = args.initialx ?? args.x ?? 0;
@@ -317,9 +327,6 @@ Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
       else h = args.frameHeight ?? args.h ?? fh;
       dx = args.gapX ?? args.dx ?? 0;
       dy = args.gapY ?? args.dy ?? 0;
-    } else {
-      w = w < 0 ? fw : w;
-      h = h < 0 ? fh : h;
     }
     for (let vy = y; vy < fh; vy += h + dy) {
       for (let vx = x; vx < fw; vx += w + dx) {
@@ -328,9 +335,15 @@ Asset.AnimImageAsset = class AnimImageAsset extends Asset.ImageAsset {
     }
   }
 
-  autoSlice(x, y, hSlices, vSlices, dx, dy) {
-    return this.slice(x, y, (this.w-x)/hSlices - dx, (this.h-y)/vSlices - dy, dx, dy);
+  autoSlice(x, y, hFrames, vFrames, dx = 0, dy = 0) {
+    this.addCallback(asset => {
+      asset._autoSlice(x, y, hFrames, vFrames, dx, dy);
+    });
   }
+  _autoSlice(x, y, hFrames, vFrames, dx = 0, dy = 0) {
+    return this._slice(x, y, (super.width-x)/hFrames - dx, (super.height-y)/vFrames - dy, dx, dy);
+  }
+
 
   frameAt(clock) {
     if (this.frames.length < 1) return -1;
@@ -371,6 +384,10 @@ Asset.SubImageAsset = class SubImageAsset extends Asset.ImageAsset {
     this.subRect = new Rectangle(x, y, w, h);
   }
 
+  static getImage(src, name, abs, x, y, w, h) {
+    return new SubImageAsset(src, name, abs, x, y, w, h);
+  }
+
   get width() { return this.subRect.w; }
   get height() { return this.subRect.h; }
 
@@ -386,15 +403,12 @@ Asset.SubImageAsset = class SubImageAsset extends Asset.ImageAsset {
    * @param {string} src 
    * @param {string} name
    * @param {bool} abs
-   * @param {SliceArgs} args
    */
-  static slice(src, name, abs, args) {
-    const fw = args.frameWidth ?? args.w;
-    const fh = args.frameHeight ?? args.h;
+  static slice(src, name, abs, initialX, initialY, totalW, totalH, w, h, dx = 0, dy = 0) {
     const ret = [];
-    for (let y = args.initialy ?? args.y ?? 0; y < fh; y += fh + (args.gapY ?? args.dy ?? 0)) {
-      for (let x = args.initialx ?? args.x ?? 0; x < fw; x += fw + (args.gapX ?? args.dx ?? 0)) {
-        ret.push(new SubImageAsset(src, name ? `${name}_${ret.length}` : null, abs, x, y, fw, fh));
+    for (let y = initialY; y < totalH; y += h + dy) {
+      for (let x = initialY; x < totalW; x += w + dx) {
+        ret.push(new SubImageAsset(src, name ? `${name}_${ret.length}` : null, abs, x, y, w, h));
       }
     }
     return ret;
@@ -416,6 +430,7 @@ new Asset.ImageAsset("projectile/bullet_rocket.png", "bullet_rocket");
 new Asset.ImageAsset("projectile/bullet_plasma.png", "bullet_plasma");
 new Asset.ImageAsset("bg/Starfield2.png", "bg0");
 new Asset.ImageAsset("bg/Starfield3.png", "bg1");
+new Asset.ImageAsset("turtle.png", "turtle");
 // Animated assets
 new Asset.AnimImageAsset(
   "projectile/splode.png", "splode", false, {
